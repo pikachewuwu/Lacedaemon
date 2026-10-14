@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Daemon</title>
+<meta name="description" content="DAEMON. The layer underneath Lacedaemon. 21,000,000 units, issued only for conviction.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=IBM+Plex+Mono:wght@300;400;500&display=swap">
+<link rel="stylesheet" href="assets/daemon.css">
+</head>
+<body>
+
+<canvas id="field" aria-hidden="true"></canvas>
+
+<header class="top">
+  <div class="wrap top-inner">
+    <a class="surface" href="index.html">&larr; Lacedaemon</a>
+    <nav class="nav" aria-label="Sections">
+      <a href="#protocol">Protocol</a>
+      <a href="#modules">Modules</a>
+      <a href="#arbiter">Arbiter</a>
+      <a href="#governance">Governance</a>
+    </nav>
+    <span class="ver">v0 · draft</span>
+  </div>
+</header>
+
+<main>
+  <section class="hero" aria-labelledby="daemon-title">
+    <div class="wrap hero-inner">
+      <p class="eyebrow">Underneath Lacedaemon</p>
+      <h1 id="daemon-title" class="wordmark">DAEMON</h1>
+      <p class="thesis">A currency with a fixed supply, for the people who build the games. Lock it into what you make. Earn it when people play.</p>
+      <dl class="stats">
+        <div><dt>Supply cap</dt><dd>21,000,000</dd></div>
+        <div><dt>Daily emission</dt><dd>7,200</dd></div>
+        <div><dt>Decay</dt><dd>0.9&times; / year</dd></div>
+        <div><dt>Weighting</dt><dd>c<sup>1.5</sup></dd></div>
+      </dl>
+      <p class="hint">Click anywhere</p>
+    </div>
+  </section>
+
+  <section class="block" id="protocol" aria-labelledby="protocol-title">
+    <div class="wrap">
+      <header class="block-head">
+        <p class="label">Protocol</p>
+        <h2 id="protocol-title">Nothing is printed. Every unit is earned.</h2>
+        <p>DAEMON runs on three parts. Players on the surface never need to see any of them. Dragons stay the everyday money; DAEMON is for those who want a stake in what gets built.</p>
+      </header>
+
+      <div class="layers">
+        <article>
+          <p class="label">Ledger</p>
+          <h3>Transfers</h3>
+          <p>Final, atomic, peer to peer. Send in the open or hidden; hidden transfers log the amount and nothing else. A DAEMON/Dragon order book sets the price.</p>
+        </article>
+        <article>
+          <p class="label">Convergence</p>
+          <h3>The daily arena</h3>
+          <p>Commit DAEMON to rock, paper or scissors. Commitments are hidden and final. The smallest pool wins half. The two largest fight for the other half.</p>
+        </article>
+        <article>
+          <p class="label">Governance</p>
+          <h3>Rules can change</h3>
+          <p>A proposal sets its own approval threshold as a share of circulating supply. Holders vote with weight. Even the consensus mechanism can be replaced.</p>
+        </article>
+      </div>
+
+      <div class="arena" id="arena">
+        <div class="arena-head">
+          <div>
+            <p class="label">Try a convergence</p>
+            <p class="arena-sub">You commit 1,000 DAEMON. Six others commit at random. Pick a side, then resolve.</p>
+          </div>
+          <div class="picks" role="radiogroup" aria-label="Your side">
+            <button type="button" class="pick" data-pick="rock" role="radio" aria-checked="true">Rock</button>
+            <button type="button" class="pick" data-pick="paper" role="radio" aria-checked="false">Paper</button>
+            <button type="button" class="pick" data-pick="scissors" role="radio" aria-checked="false">Scissors</button>
+          </div>
+        </div>
+        <div class="pools" id="pools"></div>
+        <div class="arena-foot">
+          <p class="verdict" id="verdict" aria-live="polite">Pools are hidden until the window closes.</p>
+          <button type="button" class="btn" id="resolve">Resolve</button>
+        </div>
+      </div>
+
+      <div class="emission">
+        <div class="emission-copy">
+          <p class="label">Supply</p>
+          <h3>Toward 21,000,000</h3>
+          <p>Emission starts at 7,200 a day and drops by a tenth every year, rounded down. Hitting a supply threshold can cut it early. The curve flattens into the cap and stops there.</p>
+          <dl class="mini" id="emission-facts"></dl>
+        </div>
+        <div class="chart-wrap">
+          <svg id="emission-chart" role="img" aria-label="Cumulative DAEMON supply by year, approaching the 21 million cap"></svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="modules" aria-labelledby="modules-title">
+    <div class="wrap">
+      <header class="block-head">
+        <p class="label">Modules</p>
+        <h2 id="modules-title">Everything that pays out is a module.</h2>
+        <p>The arena, game night and the Minecraft vault are all modules. Anyone can build a new one. Players just play it, mostly for Dragons, and never touch DAEMON. The builders and backers underneath earn DAEMON when people show up.</p>
+      </header>
+
+      <ol class="flow">
+        <li><span class="step">1</span><h3>Lock</h3><p>A builder locks DAEMON behind a module as a bond. Others can lock alongside to back it. Longer locks count for more.</p></li>
+        <li><span class="step">2</span><h3>Play</h3><p>People play. The module reports activity: unique players, sessions, how often they come back.</p></li>
+        <li><span class="step">3</span><h3>Weigh</h3><p>Once a day, the Arbiter scores every module on activity and conviction and decides the split.</p></li>
+        <li><span class="step">4</span><h3>Emit</h3><p>That day's emission flows to each module, then to its builder and backers in proportion to what they locked.</p></li>
+      </ol>
+
+      <div class="registry-wrap">
+        <table class="registry">
+          <caption>Module registry <span>example figures</span></caption>
+          <thead>
+            <tr><th scope="col">ID</th><th scope="col">Module</th><th scope="col">Status</th><th scope="col" class="r">Locked</th><th scope="col" class="r">Players 7d</th><th scope="col" class="r">Share</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>00</td><td><b>Arbiter</b><span>Decides the daily split</span></td><td><span class="tag">core</span></td><td class="r">&mdash;</td><td class="r">&mdash;</td><td class="r">&mdash;</td></tr>
+            <tr><td>01</td><td><b>Convergence</b><span>Daily rock, paper, scissors</span></td><td><span class="tag">core</span></td><td class="r">protocol</td><td class="r">6</td><td class="r share"><i style="--w:46%"></i>46%</td></tr>
+            <tr><td>02</td><td><b>Sunday Table</b><span>Monopoly, poker</span></td><td><span class="tag tag-on">live</span></td><td class="r">12,000</td><td class="r">7</td><td class="r share"><i style="--w:31%"></i>31%</td></tr>
+            <tr><td>03</td><td><b>Blue or Orange</b><span>Daily minority game</span></td><td><span class="tag tag-on">live</span></td><td class="r">4,800</td><td class="r">5</td><td class="r share"><i style="--w:15%"></i>15%</td></tr>
+            <tr><td>04</td><td><b>Vault</b><span>Minecraft items for Dragons</span></td><td><span class="tag tag-on">live</span></td><td class="r">2,400</td><td class="r">3</td><td class="r share"><i style="--w:8%"></i>8%</td></tr>
+            <tr class="open"><td>05</td><td><b>Yours</b><span>Lock DAEMON to register</span></td><td><span class="tag">open</span></td><td class="r">&ge; 1,000</td><td class="r">&mdash;</td><td class="r">&mdash;</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="arbiter" aria-labelledby="arbiter-title">
+    <div class="wrap arbiter-grid">
+      <header class="block-head">
+        <p class="label">Module 0</p>
+        <h2 id="arbiter-title">The Arbiter</h2>
+        <p>An open model divides the emission. Its weights, prompt and inputs are public, so anyone can run the same epoch and check they get the same answer. It judges two things: whether people actually play a module, and how much its backers are willing to lock behind it.</p>
+        <ul class="rules">
+          <li><b>Open weights, pinned.</b> One named model version, temperature 0, seeded by the epoch number.</li>
+          <li><b>Published before it pays.</b> Prompt, inputs and output are hashed and posted. A 24-hour window to contest follows.</li>
+          <li><b>Bounded.</b> No module gets more than half. Convergence never gets less than a tenth. Weights sum to one.</li>
+          <li><b>Never stuck.</b> If the model fails or breaks a bound, a plain formula runs instead: &radic;activity &times; &radic;conviction.</li>
+          <li><b>Replaceable.</b> Governance can veto an epoch or swap the model.</li>
+        </ul>
+      </header>
+
+      <figure class="console" aria-label="Example Arbiter epoch">
+        <figcaption><span class="dot"></span><span class="dot"></span><span class="dot"></span><span class="console-title">arbiter · epoch 412 · example</span></figcaption>
+<pre id="console-out"><span class="c-dim">$</span> arbiter run --epoch 412
+
+<span class="c-dim">model     </span> deepseek-v3 · open weights · pinned
+<span class="c-dim">sampling  </span> temperature 0 · seed 412
+<span class="c-dim">prompt    </span> sha256:9f2c&hellip;e41a
+<span class="c-dim">inputs    </span> sha256:41b7&hellip;07dc · 4 modules · 24 h
+<span class="c-dim">emission  </span> 7,200 DAEMON
+
+<span class="c-dim">module          activity  conviction  weight</span>
+01 convergence      0.82        &mdash;      0.46
+02 sunday-table     0.71       0.64      0.31
+03 blue-or-orange   0.44       0.31      0.15
+04 vault            0.19       0.22      0.08
+
+<span class="c-dim">bounds    </span> max 0.50 <span class="c-ok">ok</span> · floor 0.10 <span class="c-ok">ok</span> · sum 1.000 <span class="c-ok">ok</span>
+<span class="c-dim">fallback  </span> not used
+<span class="c-dim">output    </span> sha256:c0de&hellip;5ea1 · contest until 18:00<span class="cursor" aria-hidden="true"></span></pre>
+      </figure>
+    </div>
+  </section>
+
+  <section class="block" id="governance" aria-labelledby="gov-title">
+    <div class="wrap gov-grid">
+      <header class="block-head">
+        <p class="label">Governance</p>
+        <h2 id="gov-title">No consensus mechanism is eternal.</h2>
+        <p>Anyone holding DAEMON can propose a change and name the share of supply needed to pass it. Bigger changes ask for more. Proposal slots are scarce, so you can bid DAEMON for the next one. The rules evolve only when the holders agree.</p>
+      </header>
+      <div class="commands">
+        <p class="label">In Discord</p>
+        <dl>
+          <div><dt>/daemon balance</dt><dd>Your wallet, privately</dd></div>
+          <div><dt>/daemon send</dt><dd>Transfer, optionally hidden</dd></div>
+          <div><dt>/arena rock 300</dt><dd>Commit to today's convergence</dd></div>
+          <div><dt>/arena spread 900</dt><dd>Split evenly across all three</dd></div>
+          <div><dt>/daemon market</dt><dd>The DAEMON/Dragon order book</dd></div>
+          <div><dt>/governance proposal</dt><dd>Put a change to the holders</dd></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-inner">
+    <p>21,000,000. Nothing printed. Everything earned.</p>
+    <a class="surface" href="index.html">Return to the surface &uarr;</a>
+  </div>
+</footer>
+
+<script src="assets/daemon.js"></script>
+</body>
+</html>
