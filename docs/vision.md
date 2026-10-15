@@ -1,48 +1,41 @@
 # Vision
 
-## The server
+## What it is
 
-Lacedaemon is a Discord server. Three admins run it and call themselves the Shadow Council; four or five other regulars make up the rest. It has had its own currency, **dragons**, since June 2022, and the founding promise still stands:
+A website for a small Discord server. You sign in with your Discord account and your dragons come with you. The site exists to make one thing happen every week: **Sunday game night**, one table for the whole server, winner takes the dragons.
 
-> We intend to never reset the economy. Those who stick around will be rewarded most. Not participating at all is death.
-
-People love the current economy because it is simple and because of gambling: run `=collect`, play blackjack or slots, chase a BlitzCheck. Anything new has to keep that feeling.
-
-## The website
-
-A website you sign into with your Discord account. The front page has one job: get people to **Sunday game night**.
-
-- **Every Sunday afternoon, one group game.** Everyone plays together, in the browser, while talking in voice chat.
-- **The winner earns dragons.** The prize is paid into the same dragon balance people already have.
-- **Everyone starts level.** Your dragon balance doesn't buy an advantage in the game itself.
-
-### Games
-
-| Game | Status | Notes |
-|---|---|---|
-| Monopoly | Wanted | The long game, ~2 h, 2–6 players |
-| Poker | Wanted | No-limit hold'em, equal stacks, rising blinds |
-| Blue or Orange | Proposal | The server's own minority game, revived as a daily side game |
-| Liar's Dice | Proposal | Short, works well with a small group |
-| Werewolf | Proposal | Hidden roles, made for voice chat |
-
-The first two are decided. The rest are suggestions for the council to vote on.
-
-### Pages
-
-- **Front page** (`site/index.html`): the next game night with a countdown and seats, the game rotation, how to earn dragons, and the council. Bright and approachable. Its palette comes from the server icon: raised hands, a soft blue sky, a pale glow.
-- **Daemon page** (`site/daemon.html`): deliberately hard to find. Black and white, with a dot field that ripples when you click. It explains DAEMON, modules and the Arbiter to the people who care.
-
-The two pages are the two layers of the project: the sky above and what lies underneath.
-
-## DAEMON in one paragraph
-
-DAEMON is a capped currency (21,000,000) that is never printed, only earned. Anything that pays DAEMON out is a **module**: the daily rock-paper-scissors arena, Sunday game night, the Minecraft vault, and anything a member builds. Builders lock DAEMON behind their module as a bond, and others can lock alongside them to back it. Each day **Module 0, the Arbiter**, an open-source AI model with public weights, prompt and inputs, looks at how much each module is actually played and how much conviction stands behind it, and splits that day's emission between them. Players on the surface just play for dragons and never have to touch any of it. See [daemon.md](daemon.md).
+Around that sit the games people already love (gambling, Blue or Orange), new ones (poker, Monopoly, Spirits, Icarus), and the rule that has held since the first day: the economy is never reset.
 
 ## Principles
 
-1. **Simple on top.** A new member should understand the front page in ten seconds.
-2. **Never reset.** Balances carry over: UnbelievaBoat dragons, Economy++ dragons, DAEMON.
-3. **Open underneath.** DAEMON rules, Arbiter inputs and outputs are public and reproducible.
-4. **No real money.** Dragons and DAEMON have no cash value.
-5. **Report, don't abuse.** Bug abuse leads to an economy ban; bug reports get rewarded.
+1. **Simple on top.** A new member understands the lobby in ten seconds. Games feel like games, not like finance.
+2. **Never alone.** Gambling and games happen in shared rooms. Bets, wins and falls are visible to everyone there.
+3. **Nothing resets.** UnbelievaBoat dragons, Economy++ balances, DAEMON: all of it carries over.
+4. **Open underneath.** The rules, the Arbiter's inputs and its outputs are public and reproducible.
+5. **No real money.** Dragons and DAEMON have no cash value.
+6. **Report, don't abuse.** Bug abuse means an economy ban; reports get rewarded.
+
+## Two kinds of games
+
+| | House games | Daemon modules |
+|---|---|---|
+| Who makes them | The server | Members (developers) |
+| Currency | Dragons | Dragons in, DAEMON receipts out |
+| Where entry dragons go | All to the prize | Wherever the builder's program says |
+| Examples | Sunday night, poker, Monopoly, slots | Blue or Orange, Spirits, Icarus |
+
+House games are the stable core. Everything else depends on members building it, which is why the Daemon layer exists: it pays builders for games people actually play. See [daemon.md](daemon.md).
+
+## Everything connects
+
+- An entry into a module buys DAEMON, so playing anything built by a member leaves you holding a little of it.
+- Spirits packs route 40% of their price into Sunday's prize pot.
+- Blue or Orange's colours are the Spirits' elements: water, fire, grass. A win can drop a spirit of the winning colour.
+- Any finished game can drop a card, like a weekly case drop.
+- Cards, DAEMON and dragons can all be staked at a private poker table.
+- Sunday's winner gets a laurel: a one-of-a-kind card stamped with the week and the game.
+- The Arbiter reads activity from every module and pays builders in new DAEMON.
+
+## The look
+
+The surface is dark, warm and quiet, lit by one orange light, the light the hands in the server icon reach for. The Daemon world is black and white and allowed to overwhelm. See [design.md](design.md).

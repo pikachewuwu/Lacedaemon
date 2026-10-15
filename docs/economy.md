@@ -22,7 +22,7 @@ The website should read dragon balances from UnbelievaBoat (it has a public API 
 | Chat money | 100–300 random | while chatting (5 s cooldown) |
 | BlitzCheck (YAGPDB drop in #collect) | 5,000 | 3–6 hours after the last one |
 | *Real human being (and a real hero)*: 30 min in voice in the last 24 h | 8,000 | daily |
-| Winning Sunday game night | 100,000 (proposal) | weekly |
+| Winning Sunday game night | the pot (all entries) | weekly |
 
 Roles that grant dragons pay out on the next `=collect` in #collect.
 

@@ -1,107 +1,85 @@
 # DAEMON
 
-DAEMON is the layer underneath Lacedaemon: a fixed-supply currency for the people who build and back the games. This document restates the original whitepaper (`Daemon Whitepaper.pdf` in [LacedaemonEconomyPlusPlus](https://github.com/shibTHEcode/LacedaemonEconomyPlusPlus)) and adds the module system and the Arbiter.
+DAEMON is the layer underneath Lacedaemon: a fixed-supply currency for the members who build games. This document restates the original whitepaper (`Daemon Whitepaper.pdf` in [LacedaemonEconomyPlusPlus](https://github.com/shibTHEcode/LacedaemonEconomyPlusPlus)) and replaces its convergence arena with the module system.
 
-Status markers: **[live]** runs in the Economy++ bot today, **[spec]** is in the whitepaper, **[proposal]** is new here and needs a governance vote before it applies.
+Status markers: **[live]** runs in the Economy++ bot today, **[spec]** is in the whitepaper, **[proposal]** is new here and needs a governance vote.
 
 ## 1. Supply
 
 - Hard cap: **21,000,000 DAEMON**. **[spec]**
-- Emission starts at **7,200 per day**. **[spec]**
-- Each year, and when supply crosses defined thresholds, the daily rate becomes `floor(0.9 × rate)`. **[spec]** With yearly cuts alone the cap is reached in year 16.
-- DAEMON is never printed by admins. Initial balances may be seeded only when a fresh database is created; after that, new DAEMON enters circulation only through emission. **[live]**
-- Supply accounting includes DAEMON locked in orders, arena commitments and module locks.
-
-Open question: the whitepaper mentions "defined cumulative thresholds" but never lists them. Proposal: cut at 25%, 50% and 75% of the cap.
+- Emission starts at **7,200 per day** and becomes `floor(0.9 × rate)` every year and at supply thresholds. **[spec]** With yearly cuts alone the cap is reached in year 16.
+- Nothing is printed. After genesis, new DAEMON only enters through emission. **[live]**
+- Supply counts DAEMON locked in orders, escrow and module stock.
+- Open question: the whitepaper mentions thresholds without listing them. Proposal: 25%, 50% and 75% of the cap.
 
 ## 2. Ledger
 
-- Transfers are atomic and final. **[live]**
-- Hidden transfers: the public log shows the amount, not sender or recipient. **[live]**
-- A DAEMON/Dragon limit order book. Sell orders lock DAEMON, buy orders lock dragons. **[live]**
+- Transfers are atomic and final; hidden transfers log the amount only. **[live]**
+- A DAEMON/dragon order book. **[live]**
+- One append-only ledger holds every entry, receipt, lock, vote and transfer. The Daemon world shows its live tail.
 
-## 3. Convergence (Module 1)
+## 3. The convergence arena is retired **[proposal]**
 
-The daily arena. **[spec]**
+The daily rock-paper-scissors arena was the whitepaper's only source of emission. Its core idea (the smallest pool wins half, the two largest fight) now lives on the surface inside Blue or Orange, where it does what it was meant to do: make coordination and alt accounts pointless. See [games.md](games.md). Emission moves to modules.
 
-1. A cycle opens with three options: rock, paper, scissors.
-2. Anyone commits any whole amount of DAEMON (minimum 1) to any mix of options. Individual choices are hidden; commitments are final.
-3. When the cycle closes (at a randomised time inside the daily window), the three pools are ranked by size. Ties go to the pool whose first commitment came earliest (earliest ranks higher; latest becomes the underdog).
-4. The **smallest pool** (the underdog) takes half the emission.
-5. The **two largest pools** fight by normal rock-paper-scissors rules. The winner takes the other half.
-6. The losing pool's commitments are forfeited.
-7. Inside each winning pool, a commit `c` earns `c^1.5 / Σ c_j^1.5 × tranche`. Concentrated conviction beats spreading thin.
+Note for the backend: the Economy++ Two arena code resolves only two-pool rounds and splits pro rata; the rules in `games.md` are canonical.
 
-Choices made here:
+## 4. Two kinds of games
 
-- Winners get their stake back. Forfeited stakes are split equally between the two winning tranches, so nothing disappears. **[proposal]** (The Economy++ Two rewrite also handed forfeited stakes to winners.)
-- If only two pools have commitments, they fight for the whole emission. If only one does, every stake is returned and nothing is minted.
+- **House games** (Sunday, poker, Monopoly, slots) belong to the server and run on dragons only. They are not modules.
+- **Modules** are games built by members. What surfaces on the site is a game with a small mark; underneath, it is a program.
 
-Implementation note: the Economy++ Two rewrite (`economy/arena.py`) only resolves when exactly two pools exist and splits pro rata, not by `c^1.5`. The whitepaper rule above is the canonical one; any new backend should implement it.
+## 5. Modules **[proposal]**
 
-The earlier draft "Daily RPS Weighted Arena" spec (April 2026) described the same rules with 7,200 DAEMON per cycle. Only its overview survived in the Discord log.
+A module is registered by an owner who locks DAEMON behind it (at least 1,000) for a chosen duration. Anyone can lock alongside to back it.
 
-## 4. Modules **[proposal]**
+**An entry:**
 
-**Everything that pays out DAEMON is a module.** This generalises the whitepaper, where emission came only from the arena, so it needs a governance vote to activate.
+1. The player pays dragons.
+2. Those dragons **buy DAEMON from the owner** at the owner's price, drawn from the locked stock. The player keeps that DAEMON whether they win or lose.
+3. The owner's program **routes the dragons**: a share into the game's pot, a share into another module's pot (Spirits feeds the Sunday prize), and the rest to the owner. Routing everything back is allowed (fully or partially redistributed).
+4. If the stock runs out, the module stops taking entries until the owner tops it up.
 
-| ID | Module | What it is |
-|---|---|---|
-| 00 | Arbiter | Splits each day's emission between modules |
-| 01 | Convergence | The daily arena above |
-| 02 | Sunday Table | Weekly game night: Monopoly, poker |
-| 03 | Blue or Orange | Daily minority game |
-| 04 | Vault | Minecraft items traded for dragons |
-| 05+ | Open | Anything a member builds |
+**Why owners do this:** each day the Arbiter pays modules new DAEMON for activity and conviction. A generous program attracts players, players raise activity, activity raises emission. The owner shares emission with backers in proportion to locked amount × lock weight.
 
-How it works:
+Example programs from the mockup:
 
-1. **Lock.** A builder registers a module by locking at least 1,000 DAEMON as a bond. Anyone can lock DAEMON behind an existing module to back it. Locks have a chosen duration; a longer lock counts for more (weight = √days, capped at 90 days). Locked DAEMON can't be spent until the lock ends.
-2. **Play.** Players use the module, usually for dragons. They never need to hold DAEMON. The module reports activity for the day: unique players, sessions, returning players and dragon volume.
-3. **Weigh.** Once a day the Arbiter scores each module and outputs weights that sum to 1.
-4. **Emit.** Each module receives `weight × daily emission`. Convergence pays it out through the arena rules. Every other module pays its builder and backers in proportion to locked amount × lock weight.
+| ID | Module | Owner | Price | Routes |
+|---|---|---|---|---|
+| 01 | Blue or Orange | gorgo | 2,000 | 95% pot · 5% owner |
+| 02 | Spirits | kyniska | 1,500 | 40% Sunday · 60% owner |
+| 03 | Icarus | agis | 2,500 | 98% bank · 2% owner |
 
-Players aren't paid in DAEMON for playing. That keeps games playable without knowing DAEMON exists, and it keeps DAEMON from becoming farmable by bots.
+**Activity** = 10 × unique players + 6 × √entries + 4 × log10(1 + dragon volume), over 7 days.
+**Conviction** = locked DAEMON × √(lock days, capped at 90).
 
-## 5. The Arbiter (Module 0) **[proposal]**
+The Daemon world has a builder that previews a program's economics live: what a player receives, where each dragon goes, the fallback weight, net DAEMON per day and how long the stock lasts.
 
-An open-source AI model decides the daily split. Everyone knows which model it is, and anyone can rerun it.
+## 6. The Arbiter (module 0) **[proposal]**
 
-**Inputs** (published per epoch): each module's activity numbers, conviction (total locked × lock weight, number of distinct backers), and its last 7 days of weights.
+An open-weights model, pinned to one exact version (DeepSeek as the first candidate), splits each day's emission between modules.
 
-**Model:** an open-weights model pinned to one exact version (DeepSeek as a first candidate), run at temperature 0 with the epoch number as seed. The system prompt lives in this repository; changing it is a governance proposal.
+- **Inputs** (published per epoch): each module's activity, conviction, backers, and its last 7 days of weights.
+- **Reproducible:** temperature 0, seeded by the epoch number. The prompt lives in this repository; changing it is a governance proposal. Prompt, input and output hashes are posted before payout.
+- **Bounded:** no module above 50%, none below 2%, weights sum to 1.
+- **Checked:** the output must land within 0.02 of the deterministic fallback, `√activity share × √conviction share`, bounded and normalised. If the model fails or breaks a bound, the fallback pays.
+- **Sybil-aware:** only accounts older than 90 days count toward activity, no single account counts for more than a quarter of a module's entries, and DAEMON receipts that flow back to the owner get flagged.
+- **Contestable:** payouts wait 24 hours; governance can veto an epoch or swap the model.
 
-**Output:** one weight per module, plus a short written rationale.
+The fallback is implemented and tested in `web/src/economy/arbiter.ts`.
 
-**Guarantees**
+## 7. Governance **[live, extended]**
 
-1. **Reproducible.** Model version, prompt hash, input hash and output hash are posted before payout. Anyone with the weights can check the result.
-2. **Bounded.** No module gets more than 0.50. Convergence never gets less than 0.10. Weights are non-negative and sum to 1.
-3. **Never stuck.** If the model fails, times out or breaks a bound, a deterministic fallback runs: weight ∝ √activity × √conviction, then bounds are applied.
-4. **Contestable.** Payout waits 24 hours. Governance can veto an epoch, which then uses the fallback.
-5. **Replaceable.** Governance can swap the model or the prompt.
+- A proposal names its own approval threshold as a share of circulating supply. Votes are weighted by DAEMON. Proposal slots are scarce and can be bid for.
+- Anything can change this way: emission, the Arbiter, module rules, governance itself.
+- A value from the 2025 announcement of this currency: *code is not edited except to fix bugs*. Rules change through governance, never by quiet edits.
 
-The model is a judge, not a ledger: it never moves DAEMON directly, it only outputs weights that the backend validates.
-
-## 6. Governance **[live]**
-
-- A proposal names its own approval threshold as a percentage of circulating supply.
-- Votes are weighted by DAEMON held.
-- Proposal slots are rate-limited; members can bid DAEMON for the next slot.
-- Anything can be changed this way, including the arena rules, the emission schedule, the Arbiter and governance itself. As the whitepaper says, no consensus mechanism is eternal.
-
-From the 2025 announcement of a future currency, kept here as a design value: *"Code is not to be edited ever (unless to fix bugs, but features shall not be changed)."* In DAEMON this means rules change only through governance, never by an admin quietly editing code.
-
-## 7. Discord commands **[live]**
+## 8. Discord commands **[live]**
 
 | Command | Purpose |
 |---|---|
-| `/daemon balance` | Show your balance privately |
-| `/daemon send <user> <amount> [hidden] [message]` | Transfer |
-| `/daemon stats` / `/daemon info` | Supply and guide |
-| `/daemon market` / `buy` / `sell` / `orders` / `cancel_order` | DAEMON/Dragon order book |
-| `/arena rock\|paper\|scissors <amount>` | Commit to today's convergence |
-| `/arena spread <amount>` / `/daemon split` | Split evenly across all three |
-| `/arena autospread` / `/daemon dailysplit` | Auto-split every cycle |
-| `/governance proposal` / `vote` / `bid` | Governance |
-| `/iamsatoshinakamoto yes\|no` | Top holder claims or releases the Satoshi role |
+| `/daemon balance` · `send` · `stats` · `info` | Wallet and transfers (hidden transfers supported) |
+| `/daemon market` · `buy` · `sell` · `orders` · `cancel_order` | DAEMON/dragon order book |
+| `/governance proposal` · `vote` · `bid` | Governance |
+| `/iamsatoshinakamoto yes\|no` | Top holder claims the Satoshi role |
+| `/arena …` | Retired with the convergence arena |

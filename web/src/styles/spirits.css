@@ -1,0 +1,150 @@
+/* ---- Spirit card ------------------------------------------------------------------- */
+.spirit-card {
+  --w: 168px;
+  --rar: #6e6660;
+  width: var(--w); aspect-ratio: 5 / 7; flex: none;
+  perspective: 900px; padding: 0; border: 0; background: none; color: var(--text); text-align: left;
+  font-size: calc(var(--w) / 14);
+}
+button.spirit-card { cursor: pointer; }
+.sc-sm { --w: 96px; }
+.sc-lg { --w: 260px; }
+.r-uncommon { --rar: #8fb5a6; }
+.r-rare { --rar: var(--blue); }
+.r-mythic { --rar: var(--accent); }
+.r-exalted { --rar: #f3dfb4; }
+.sc-inner {
+  --rx: 0deg; --ry: 0deg; --mx: 50%; --my: 50%;
+  position: relative; width: 100%; height: 100%;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--rx)) rotateY(var(--ry));
+  transition: transform .5s cubic-bezier(.2,.7,.2,1);
+}
+.is-down .sc-inner { transform: rotateY(180deg); }
+.sc-front, .sc-back {
+  position: absolute; inset: 0; border-radius: calc(var(--w) / 16); overflow: hidden;
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+}
+.sc-front {
+  background: linear-gradient(170deg, #221e24, #141215);
+  border: calc(var(--w) / 60 + 1px) solid var(--rar);
+  box-shadow: 0 10px 30px -12px #000c, inset 0 0 0 1px #ffffff0a;
+  display: flex; flex-direction: column; padding: 5%; gap: 3%;
+}
+.r-exalted .sc-front { border-image: linear-gradient(135deg, #fff1cf, #c9a46a, #fff7e4, #a7834e) 1; border-radius: 0; }
+.sc-back {
+  transform: rotateY(180deg);
+  background: radial-gradient(circle at 50% 30%, #2a2025, #120f12 70%);
+  border: calc(var(--w) / 60 + 1px) solid #3a2f33;
+  display: grid; place-items: center; color: var(--accent);
+}
+.sc-back::after { content: ""; position: absolute; inset: 8%; border: 1px solid #f4a35f33; border-radius: calc(var(--w) / 24); }
+.sc-top { display: flex; justify-content: space-between; align-items: baseline; gap: 4px; }
+.sc-name { font-family: var(--f-display); font-size: 1.05em; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sc-power { font-size: .8em; color: var(--rar); }
+.sc-window { position: relative; flex: 1; min-height: 0; border-radius: calc(var(--w) / 30); overflow: hidden; border: 1px solid #ffffff14; }
+.spirit-art { width: 100%; height: 100%; display: block; }
+.sc-laurel { position: absolute; left: 6%; bottom: 6%; right: 6%; text-align: center; font: 600 .6em var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: #20140a; background: linear-gradient(90deg, #f6e3b6, #e0b878); border-radius: 3px; padding: 2px; }
+.sc-text { display: flex; flex-direction: column; gap: 2px; }
+.sc-move { font-size: .78em; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+.sc-line { font-size: .68em; color: var(--text-2); line-height: 1.35; font-style: italic; }
+.sc-foot { display: flex; justify-content: space-between; font-size: .6em; color: var(--text-3); }
+.sc-sm .sc-foot { font-size: .7em; }
+.pip { width: .7em; height: .7em; border-radius: 50%; display: inline-block; flex: none; }
+.pip-water { background: var(--blue); } .pip-fire { background: var(--orange); } .pip-grass { background: var(--green); } .pip-aether { background: #efe3cc; }
+.sc-holo {
+  position: absolute; inset: 0; pointer-events: none; mix-blend-mode: color-dodge; opacity: .45;
+  background:
+    radial-gradient(circle at var(--mx) var(--my), #ffffff55, transparent 40%),
+    linear-gradient(115deg, transparent 20%, #ff9ad455 35%, #9ae8ff55 48%, #ffe49a55 60%, transparent 75%);
+  background-size: 100% 100%, 250% 250%;
+  background-position: center, var(--mx) var(--my);
+}
+.spirit-card.is-selected .sc-front { box-shadow: 0 0 0 3px var(--accent), 0 10px 30px -12px #000c; }
+button.spirit-card:hover .sc-front { border-color: color-mix(in srgb, var(--rar) 70%, white); }
+
+/* ---- Packs ------------------------------------------------------------------------- */
+.tab-body { padding-top: 22px; }
+.packs { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; align-items: start; }
+.pack-stage {
+  min-height: 420px; border-radius: 18px; border: 1px solid var(--line);
+  background: radial-gradient(ellipse at 50% 0%, #2a1f19 0%, #141114 60%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px; padding: 28px 16px; overflow: hidden;
+}
+.pack-side { display: flex; flex-direction: column; gap: 16px; }
+.pack-closed {
+  width: 210px; aspect-ratio: 5 / 7.4; border-radius: 14px; cursor: pointer;
+  border: 1px solid #5a4536; color: var(--text);
+  background:
+    radial-gradient(circle at 50% 22%, #f4a35f55, transparent 45%),
+    repeating-linear-gradient(135deg, #2a1d18 0 6px, #2f2119 6px 12px);
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 8px; padding: 22px;
+  box-shadow: 0 30px 60px -20px #000, inset 0 0 0 1px #ffffff10;
+  transition: transform .3s cubic-bezier(.2,.7,.2,1), box-shadow .3s ease;
+  animation: float 5s ease-in-out infinite;
+}
+.pack-closed:hover { transform: translateY(-6px) rotate(-1deg); box-shadow: 0 40px 70px -20px #000, 0 0 40px #f4a35f33; }
+@keyframes float { 50% { translate: 0 -6px; } }
+.pack-big { width: 240px; }
+.pack-glyph { width: 70px; height: 70px; margin-bottom: auto; margin-top: 30px; border-radius: 50%; background: radial-gradient(circle, var(--accent-2), var(--accent) 40%, transparent 70%); filter: blur(1px); }
+.pack-name { font-size: 1.8rem; letter-spacing: .14em; text-transform: uppercase; }
+.welcome-pack { display: flex; justify-content: center; padding: 10px 0 20px; }
+.pack-again { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.odds { list-style: none; margin: 0; padding: 8px 0; font-size: var(--t-sm); }
+.odds li { display: flex; justify-content: space-between; padding: 6px 16px; }
+.odds-sub { padding-left: 30px !important; font-size: var(--t-xs); }
+.rar { font: 500 10px var(--f-mono); text-transform: uppercase; letter-spacing: .06em; padding: 2px 6px; border-radius: 4px; border: 1px solid currentColor; }
+.rar-common { color: #8c837c; } .rar-uncommon { color: #8fb5a6; } .rar-rare { color: var(--blue); } .rar-mythic { color: var(--accent); } .rar-exalted { color: #f3dfb4; }
+.pack-split { display: flex; flex-direction: column; gap: 10px; font-size: var(--t-sm); }
+.pack-split div { display: flex; justify-content: space-between; color: var(--text-2); }
+
+.reveal { display: flex; flex-direction: column; align-items: center; gap: 18px; width: 100%; }
+.reveal-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.modal .reveal .spirit-card { --w: 128px; }
+.reveal-slot { cursor: pointer; animation: rise .4s ease both; }
+.reveal-slot:nth-child(2) { animation-delay: .05s; } .reveal-slot:nth-child(3) { animation-delay: .1s; } .reveal-slot:nth-child(4) { animation-delay: .15s; } .reveal-slot:nth-child(5) { animation-delay: .2s; }
+.reveal-slot.last.is-open.r-mythic .sc-front, .reveal-slot.last.is-open.r-exalted .sc-front { box-shadow: 0 0 50px #f4a35f88, 0 10px 30px -12px #000c; }
+.reveal-slot.last.is-open.r-rare .sc-front { box-shadow: 0 0 40px #6fa9e666, 0 10px 30px -12px #000c; }
+.reveal-line { font-family: var(--f-display); font-size: var(--t-lg); color: var(--accent-2); text-align: center; }
+
+/* ---- Collection ------------------------------------------------------------------ */
+.collection-bar, .market-bar { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+.progress { display: flex; align-items: center; gap: 12px; font-size: var(--t-sm); }
+.progress-track { width: 180px; height: 4px; border-radius: 2px; background: var(--bg-4); overflow: hidden; }
+.progress-track i { display: block; height: 100%; background: var(--accent); }
+.seg { display: flex; padding: 3px; border-radius: var(--r-md); background: var(--bg-2); border: 1px solid var(--line); overflow-x: auto; }
+.seg-item { border: 0; background: none; color: var(--text-3); padding: 6px 12px; border-radius: var(--r-sm); font-size: var(--t-xs); font-weight: 500; cursor: pointer; text-transform: capitalize; white-space: nowrap; }
+.seg-item.is-on { background: var(--bg-4); color: var(--text); }
+.binder { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 18px; justify-items: center; }
+.binder-slot { position: relative; }
+.binder-ghost {
+  width: 168px; aspect-ratio: 5 / 7; border-radius: 11px; border: 1px dashed var(--line-2);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--text-3); font-size: var(--t-sm);
+}
+.binder-count { position: absolute; top: -8px; right: -8px; background: var(--accent); color: var(--accent-ink); font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 999px; }
+.card-detail { display: grid; grid-template-columns: auto 1fr; gap: 26px; padding: 24px; }
+.cd-info { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.cd-info h2 { font-size: var(--t-2xl); }
+.copies { list-style: none; margin: 8px 0 0; padding: 0; }
+.copies li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); font-size: var(--t-sm); flex-wrap: wrap; }
+.copies li .btn { margin-left: auto; }
+
+/* ---- Market ------------------------------------------------------------------------ */
+.market-sell { padding: 18px; display: flex; flex-direction: column; gap: 18px; margin-bottom: 18px; }
+.sell-form { display: flex; gap: 18px; align-items: flex-start; }
+.sell-fields { display: flex; flex-direction: column; gap: 10px; flex: 1; max-width: 360px; }
+.sell-actions { display: flex; gap: 8px; }
+.my-listings { display: flex; flex-direction: column; gap: 8px; }
+.my-listing { display: flex; align-items: center; gap: 12px; font-size: var(--t-sm); flex-wrap: wrap; }
+.mk-spirit { display: inline-flex; align-items: center; gap: 8px; font-weight: 500; }
+.market-table td .avatar { width: 20px; height: 20px; font-size: .6rem; }
+
+@media (max-width: 900px) {
+  .packs { grid-template-columns: 1fr; }
+  .card-detail { grid-template-columns: 1fr; justify-items: center; }
+}
+@media (max-width: 560px) {
+  .reveal .spirit-card { --w: 128px; }
+  .binder { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .binder .spirit-card, .binder-ghost { --w: 140px; width: 140px; }
+}
