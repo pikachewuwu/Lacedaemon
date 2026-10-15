@@ -1,52 +1,40 @@
 import { describe, expect, it } from "vitest";
-import { FACE, allocate, coupon, coverage, schedule, sellBackValue, settle, totalReturn, type BondSeries } from "../src/economy/bonds";
+import { MAX_RUNWAY_MONTHS, couponsPaid, issuing, monthlyCost, nextCoupon, room, runway, windDown, type Cost } from "../src/economy/bonds";
 
-const S: BondSeries = {
-  id: "t", name: "Test", funds: "", term: 10, base: 0.01, perSeat: 0.001, seatsFrom: 6,
-  size: 50, cap: 10, issueWeek: 4, sold: 0, status: "open",
-};
+const COSTS: Cost[] = [
+  { id: "a", item: "Hosting", note: "", perMonth: 14 },
+  { id: "b", item: "Compute", note: "", perMonth: 6.5 },
+];
+const YEAR = 365.2425 * 86_400_000;
+const T0 = Date.UTC(2026, 0, 1);
 
-describe("dragon bonds", () => {
-  it("pays a base coupon plus a share of every seat beyond the threshold", () => {
-    expect(coupon(S, 4)).toBe(100);
-    expect(coupon(S, 6)).toBe(100);
-    expect(coupon(S, 8)).toBe(120);
+describe("server bonds", () => {
+  it("shows runway in whole months", () => {
+    expect(monthlyCost(COSTS)).toBe(20.5);
+    expect(runway(205, COSTS)).toBe(10);
+    expect(runway(204, COSTS)).toBe(9);
+    expect(runway(100, [])).toBe(Infinity);
   });
 
-  it("schedules one coupon per Sunday and the face at maturity", () => {
-    const pay = schedule(S, () => 7);
-    expect(pay).toHaveLength(10);
-    expect(pay[0].week).toBe(5);
-    expect(pay.at(-1)!.week).toBe(14);
-    expect(pay.at(-1)!.face).toBe(true);
-    expect(pay.reduce((s, p) => s + p.amount, 0)).toBe(10 * 110 + FACE);
-    expect(totalReturn(S, 7)).toBeCloseTo(0.11, 9);
+  it("pauses new bonds past two years of runway", () => {
+    expect(issuing(20.5 * (MAX_RUNWAY_MONTHS - 1), COSTS)).toBe(true);
+    expect(issuing(20.5 * MAX_RUNWAY_MONTHS, COSTS)).toBe(false);
+    expect(room(400, COSTS)).toBe(92);
+    expect(room(5000, COSTS)).toBe(0);
   });
 
-  it("charges 5% to sell back at issue, shrinking to nothing at maturity", () => {
-    expect(sellBackValue(S, 4)).toBe(9500);
-    expect(sellBackValue(S, 9)).toBe(9750);
-    expect(sellBackValue(S, 14)).toBe(FACE);
-    expect(sellBackValue(S, 30)).toBe(FACE);
-    expect(sellBackValue(S, 0)).toBe(9500);
+  it("pays one coupon a year, up to the term; perpetual bonds never end", () => {
+    expect(couponsPaid(T0, 3, T0 + 0.5 * YEAR)).toBe(0);
+    expect(couponsPaid(T0, 3, T0 + YEAR)).toBe(1);
+    expect(couponsPaid(T0, 3, T0 + 7 * YEAR)).toBe(3);
+    expect(couponsPaid(T0, null, T0 + 40 * YEAR)).toBe(40);
+    expect(nextCoupon(T0, 3, T0 + 1.5 * YEAR)).toBeCloseTo(T0 + 2 * YEAR, -3);
+    expect(nextCoupon(T0, 3, T0 + 3.2 * YEAR)).toBeNull();
+    expect(nextCoupon(T0, null, T0 + 99.5 * YEAR)).toBeCloseTo(T0 + 100 * YEAR, -3);
   });
 
-  it("fills small orders first and caps everyone", () => {
-    const got = allocate(
-      [{ name: "whale", qty: 40 }, { name: "a", qty: 2 }, { name: "b", qty: 5 }, { name: "c", qty: 1 }],
-      12,
-      10,
-    );
-    expect(got).toEqual({ c: 1, a: 2, b: 5, whale: 4 });
-    expect(allocate([{ name: "x", qty: 50 }], 100, 10)).toEqual({ x: 10 });
-  });
-
-  it("never defaults: short coupons roll and are paid first", () => {
-    const week1 = settle(500, 0, 800);
-    expect(week1).toEqual({ paid: 500, rolled: 300, treasury: 0 });
-    const week2 = settle(2000, week1.rolled, 800);
-    expect(week2).toEqual({ paid: 1100, rolled: 0, treasury: 900 });
-    expect(coverage(3000, 1000)).toBe(3);
-    expect(coverage(3000, 0)).toBe(Infinity);
+  it("returns what's left pro rata if the server closes", () => {
+    expect(windDown(300, [{ name: "a", amount: 50 }, { name: "b", amount: 25 }, { name: "a", amount: 25 }])).toEqual({ a: 225, b: 75 });
+    expect(windDown(0, [{ name: "a", amount: 10 }])).toEqual({});
   });
 });

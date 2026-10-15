@@ -10,7 +10,7 @@ import { ItemSprite } from "../ui/Pixel";
 import { itemById } from "../games/minecraft/items";
 
 const TAG_LABEL: Record<LedgerEntry["tag"], string> = {
-  entry: "entry", prize: "prize", collect: "collect", pack: "pack", market: "market", drop: "drop", wager: "table", refund: "refund", quest: "quest", minecraft: "minecraft", bond: "bond",
+  entry: "entry", prize: "prize", collect: "collect", pack: "pack", market: "market", drop: "drop", wager: "table", refund: "refund", quest: "quest", minecraft: "minecraft",
 };
 
 export function WalletPage() {
@@ -57,9 +57,9 @@ export function WalletPage() {
           <span className="faint">Worth about <Dragons value={Object.entries(s.mc.vault).reduce((t, [id, q]) => t + itemById(id).ref * q, 0)} />. Trade it, stake it, withdraw it in game.</span>
         </button>
         <button className="holding" onClick={() => go("treasury")}>
-          <span className="label">Dragon bonds</span>
-          <span className="holding-v num">{s.bonds.lots.reduce((n, l) => n + l.qty, 0)} <span className="faint">bonds</span></span>
-          <span className="faint">{s.bonds.earned > 0 ? <>Coupons so far <Dragons value={s.bonds.earned} />. </> : null}Lent to the Treasury, paid back at game night.</span>
+          <span className="label">Server bonds</span>
+          <span className="holding-v num">{s.bonds.held.length} <span className="faint">{s.bonds.held.length === 1 ? "bond" : "bonds"}</span></span>
+          <span className="faint">What keeps the server running. Rewarded with laurels, never paid back in money.</span>
         </button>
         <div className="holding holding-daemon">
           <span className="label">DAEMON</span>

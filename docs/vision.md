@@ -14,7 +14,7 @@ The site is meant to replace Discord for this server, not sit next to it: chat, 
 2. **Never alone.** Games of chance happen in one shared room with a public log. They have their place (the slot machine, Icarus, the pack reel) but they are one room of a much larger site, not the site.
 3. **Nothing resets.** UnbelievaBoat dragons, Economy++ balances, DAEMON: all of it carries over.
 4. **Open underneath.** The rules, the Arbiter's inputs and its outputs are public and reproducible.
-5. **No real money.** Dragons and DAEMON have no cash value.
+5. **No real money in the games.** Dragons and DAEMON have no cash value and can't be bought. Real money only ever goes one way: server bonds, donations that keep the lights on, rewarded with things that can't be cashed out.
 6. **Report, don't abuse.** Bug abuse means an economy ban; reports get rewarded.
 
 ## Two kinds of games
@@ -39,7 +39,7 @@ House games are the stable core. Everything else depends on members building it,
 - Quests touch every page (chat, Minecraft, the paper, the market, the games) and pay dragons, packs and titles.
 - The Laconian is written from what happened on the site; everything is also posted in #news.
 - Trading agents act on the same order books as people, inside limits their owner sets.
-- The machine's edge and the site's fees fund the Treasury, which pays dragon bonds at game night; full tables raise the coupons.
+- Server bonds pay the real bills; their holders get a yearly laurel and the Gilded design.
 - Cards, DAEMON and dragons can all be staked at a private poker table.
 - Sunday's winner gets a laurel: a one-of-a-kind card stamped with the week and the game.
 - The Arbiter reads activity from every module and pays builders in new DAEMON.

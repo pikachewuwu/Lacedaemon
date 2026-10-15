@@ -60,22 +60,24 @@ Slots payout table (January 2026): four symbols pay 34×, 16×, 8× and 4×. Thr
 - Good suggestions are rewarded.
 - The economy is never reset.
 
-## The Treasury and dragon bonds (proposal)
+## The Treasury and server bonds (proposal)
 
-The house has its own small books: the slot machine's edge, private table fees and a 1% trade fee on items and DAEMON. House games still pay every entry dragon to the prize; the Treasury lives on edges and fees.
+Lacedaemon has real bills: the Minecraft server, the Arbiter's daily run, this site and its domain, about €27.50 a month. **Server bonds** pay for them. A bond is a voluntary donation in real money that you hold as a long-term certificate, with a small reward every year. Borrowed from real bonds, rethought:
 
-**Dragon bonds** let the server spend those future fees now, on things worth doing ahead of time: a big season-final prize announced before the season starts, dragon bounties for a Minecraft build, seed pots for new member-built modules. Members lend dragons; the Treasury pays them back at game night. They borrow from real bonds but are rethought for a server:
-
-| | Real bonds | Dragon bonds |
+| | Real bonds | Server bonds |
 |---|---|---|
-| Schedule | Coupons twice a year | A coupon every game night; the face back on the last Sunday of the term |
-| Coupon | Fixed or tied to an index | A base plus a share of the night: every seat filled past six adds to it, so holders want full tables |
-| Allocation | Biggest buyers first | Smallest orders first, and a cap per member per series |
-| Shortfall | Default | Nothing defaults: an unpaid coupon rolls to next Sunday and is paid first |
-| Early exit | Sell at market | Sell back to the Treasury any time (5% fee at issue, shrinking to zero at maturity), or sell to a member on the board |
+| What you get back | Your money, plus interest | Nothing in money. It's a gift. |
+| Coupon | Money, once or twice a year | Once a year on the bond's anniversary: a laurel card stamped with the year (yours alone, never traded or staked) and one cosmetic of your choice |
+| Term | Months to decades | Three years, ten years, or perpetual (a consol) |
+| Issuer's limit | Borrows what it can | Never more than 24 months of costs ahead; past that, new bonds pause |
+| If the issuer fails | Default | If the server closes, what's left goes back to holders pro rata |
 
-Face is 10,000 dragons. The Treasury page shows income, the coupons due this Sunday and the coverage between them, so anyone can see whether the server can pay. Dragons only: a bond is a promise of dragons, never of money. Real costs (Minecraft hosting, the Arbiter's compute) stay outside the dragon economy.
+Every bond also comes with a numbered certificate, the Bondholder role, a place on the wall, and the **Gilded** design for the whole site.
 
-Why at all: Soul income (17,000 every 777 minutes) keeps adding dragons. Bonds give people with large balances something steady to do with them that isn't gambling, take dragons out of circulation for a while, and let the community decide in advance what's worth funding.
+**Why rewards are never dragons.** Dragons can be spent at the slot machine and on Icarus. If dragons could be had for euros, those games would start to look like real-money gambling, which German law regulates strictly. Keeping bond rewards cosmetic and non-transferable keeps real money out of the games entirely. For the same reason a bond is never repaid in money: repayment with interest would make it an investment.
 
-Engine: `web/src/economy/bonds.ts` (coupons, schedules, sell-back value, small-first allocation, rolling shortfalls), tested in `web/tests/bonds.test.ts`.
+**Open books.** The Treasury page lists every monthly cost, the balance, the runway in months and everyone on the wall. Every euro in and out goes into The Laconian once a month.
+
+The mockup has three series: **Lights on** (3 years, from €10: hosting), **The Arbiter** (10 years, from €25: the daily run) and **The Consol** (perpetual, from €50: the endowment, plus the Founder title). Payments aren't connected; holding a bond in the mockup only records it locally.
+
+Engine: `web/src/economy/bonds.ts` (runway, the 24-month pause, yearly coupons, pro-rata wind-down), tested in `web/tests/bonds.test.ts`.

@@ -14,7 +14,7 @@
   position: fixed; z-index: 45; left: 0; top: 0; bottom: 28px; width: 236px;
   padding: max(14px, env(safe-area-inset-top, 0px)) 12px 12px max(12px, env(safe-area-inset-left, 0px));
   display: flex; flex-direction: column; gap: 10px;
-  background: #0f0d10; border-right: 1px solid var(--line);
+  background: var(--chrome); border-right: 1px solid var(--line);
   overflow-y: auto; scrollbar-width: thin;
 }
 .brand { display: flex; align-items: center; gap: 10px; background: none; border: 0; padding: 6px 8px 10px; cursor: pointer; color: var(--text); }
@@ -95,7 +95,7 @@
   padding-bottom: env(safe-area-inset-bottom, 0px);
   padding-left: var(--gutter-l); padding-right: var(--gutter-r);
   display: flex; align-items: center; gap: 18px;
-  background: #0d0b0d; border-top: 1px solid var(--line);
+  background: var(--chrome); border-top: 1px solid var(--line);
   font-size: 11px; color: var(--text-3); letter-spacing: .02em;
   white-space: nowrap; overflow: hidden;
 }

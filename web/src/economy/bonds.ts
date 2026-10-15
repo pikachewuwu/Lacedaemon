@@ -1,102 +1,80 @@
 /**
- * Dragon bonds. The Treasury (the house) borrows dragons from members for a
- * named purpose and pays them back at game night. Borrowed from real bonds,
- * rethought for a server:
+ * Server bonds: how Lacedaemon pays its real bills. A bond is a voluntary
+ * donation in real money, held as a long-term certificate, with a small
+ * reward every year of its term. Borrowed from real bonds, rethought:
  *
- * - Terms run in Sundays. Coupons are paid at game night, with the prize.
- * - A coupon has a base and a share of the night: every seat filled beyond a
- *   threshold adds to it, so holders want full tables.
- * - Nothing defaults. A coupon the Treasury can't cover rolls to the next
- *   Sunday and is paid first.
- * - Small orders are filled first, and no member may hold more than a cap of
- *   any series. Bonds are for everyone, not for whoever holds the most.
- * - A bond can always be sold back to the Treasury. The fee starts at 5%
- *   and shrinks to nothing at maturity.
- *
- * Dragons only. A bond is a promise of dragons, never of money.
+ * - Nothing is paid back in money, and no reward can be cashed out, traded
+ *   or turned into dragons. That keeps bonds a donation, not an investment,
+ *   and keeps real money away from the games of chance.
+ * - Terms are long: three years, ten years, or perpetual (a consol).
+ * - The coupon is yearly, on the bond's anniversary: a laurel card stamped
+ *   with the year, which only its holder can own, and one cosmetic of their choice.
+ * - The books are open. Every cost is listed, and runway is shown in months.
+ * - The server never raises more than two years ahead. Past that, new bonds pause.
+ * - If Lacedaemon ever closes, whatever is left goes back to holders, pro rata.
  */
 
-export const FACE = 10_000;
-export const SELL_BACK_FEE = 0.05;
+export const MAX_RUNWAY_MONTHS = 24;
 
-export interface BondSeries {
+export interface Cost {
+  id: string;
+  item: string;
+  note: string;
+  /** Euros a month. */
+  perMonth: number;
+}
+
+export interface Issue {
   id: string;
   name: string;
-  /** What the borrowed dragons pay for. */
+  /** What this series pays for. */
   funds: string;
-  /** Number of Sundays until the face is repaid. */
-  term: number;
-  /** Coupon per Sunday as a share of face. */
-  base: number;
-  /** Extra coupon per seat filled beyond `seatsFrom`. */
-  perSeat: number;
-  seatsFrom: number;
-  /** Bonds in the series. */
-  size: number;
-  /** Most bonds one member may hold. */
-  cap: number;
-  /** Season week of issue. Coupons start the Sunday after. */
-  issueWeek: number;
-  /** Already placed with members (mockup state). */
-  sold: number;
-  status: "open" | "subscribing" | "placed" | "matured";
+  /** Years of yearly coupons; null for a perpetual bond. */
+  term: number | null;
+  /** Smallest bond in euros. */
+  min: number;
+  suggested: number[];
+  /** Raised so far in euros, and from how many holders. */
+  raised: number;
+  holders: number;
+  /** Extra beyond what every bond gets. */
+  extra: string;
 }
 
-/** Coupon for one Sunday, given how many seats game night filled. */
-export function coupon(s: BondSeries, seats: number): number {
-  return Math.round(FACE * (s.base + s.perSeat * Math.max(0, seats - s.seatsFrom)));
+export const monthlyCost = (costs: Cost[]) => Math.round(costs.reduce((s, c) => s + c.perMonth, 0) * 100) / 100;
+
+/** Whole months the balance covers. */
+export function runway(balance: number, costs: Cost[]): number {
+  const m = monthlyCost(costs);
+  return m <= 0 ? Infinity : Math.floor(balance / m);
 }
 
-export const maturityWeek = (s: BondSeries) => s.issueWeek + s.term;
+/** New bonds pause once the balance covers more than the cap. */
+export const issuing = (balance: number, costs: Cost[]) => runway(balance, costs) < MAX_RUNWAY_MONTHS;
 
-/** Every payment one bond makes, given the seats each Sunday fills. */
-export function schedule(s: BondSeries, seatsIn: (week: number) => number): { week: number; amount: number; face: boolean }[] {
-  return Array.from({ length: s.term }, (_, i) => {
-    const week = s.issueWeek + 1 + i;
-    const last = i === s.term - 1;
-    return { week, amount: coupon(s, seatsIn(week)) + (last ? FACE : 0), face: last };
-  });
+/** Room left before bonds pause, in euros. */
+export const room = (balance: number, costs: Cost[]) => Math.max(0, Math.round(MAX_RUNWAY_MONTHS * monthlyCost(costs) - balance));
+
+const YEAR_MS = 365.2425 * 86_400_000;
+
+/** Anniversaries passed since purchase, capped at the term. */
+export function couponsPaid(boughtAt: number, term: number | null, now: number): number {
+  const years = Math.floor((now - boughtAt) / YEAR_MS + 1e-9);
+  return Math.max(0, term === null ? years : Math.min(term, years));
 }
 
-/** What the Treasury pays to take one bond back in a given week. */
-export function sellBackValue(s: BondSeries, week: number): number {
-  const left = Math.max(0, Math.min(s.term, maturityWeek(s) - week));
-  return Math.round(FACE * (1 - SELL_BACK_FEE * (left / s.term)));
+/** When the next coupon falls, or null once the term is over. */
+export function nextCoupon(boughtAt: number, term: number | null, now: number): number | null {
+  const paid = couponsPaid(boughtAt, term, now);
+  if (term !== null && paid >= term) return null;
+  return boughtAt + (paid + 1) * YEAR_MS;
 }
 
-/** Total paid over the life of one bond per dragon lent, at a flat seat count. */
-export function totalReturn(s: BondSeries, seats: number): number {
-  return (s.term * coupon(s, seats) + FACE) / FACE - 1;
-}
-
-/**
- * Fill a subscription: smallest orders first, each capped, until the series
- * runs out. Returns bonds allotted per member.
- */
-export function allocate(orders: { name: string; qty: number }[], available: number, cap: number): Record<string, number> {
+/** If Lacedaemon closes: what's left goes back to holders in proportion to what they gave. */
+export function windDown(balance: number, holdings: { name: string; amount: number }[]): Record<string, number> {
+  const total = holdings.reduce((s, h) => s + h.amount, 0);
   const out: Record<string, number> = {};
-  let left = available;
-  const queue = orders
-    .map((o, i) => ({ ...o, qty: Math.min(o.qty, cap), i }))
-    .filter((o) => o.qty > 0)
-    .sort((a, b) => a.qty - b.qty || a.i - b.i);
-  for (const o of queue) {
-    const got = Math.min(o.qty, left);
-    out[o.name] = (out[o.name] ?? 0) + got;
-    left -= got;
-  }
+  if (total <= 0 || balance <= 0) return out;
+  for (const h of holdings) out[h.name] = Math.floor(((out[h.name] ?? 0) + (balance * h.amount) / total) * 100) / 100;
   return out;
 }
-
-/**
- * Pay what's due from what the Treasury has. Rolled coupons from earlier
- * Sundays are paid first; anything short rolls on. Nothing defaults.
- */
-export function settle(treasury: number, rolled: number, due: number): { paid: number; rolled: number; treasury: number } {
-  const owed = rolled + due;
-  const paid = Math.min(owed, Math.max(0, treasury));
-  return { paid, rolled: owed - paid, treasury: treasury - paid };
-}
-
-/** How many times this Sunday's coupons the Treasury earns in a week. */
-export const coverage = (income: number, couponsDue: number) => (couponsDue <= 0 ? Infinity : income / couponsDue);

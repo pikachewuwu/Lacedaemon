@@ -9,6 +9,11 @@ import "./styles/spirits.css";
 import "./styles/daemon.css";
 import "./styles/worlds.css";
 import "./styles/pages2.css";
+import "./styles/themes.css";
+import { getState } from "./app/store";
+import { applyDesign } from "./app/themes";
+
+applyDesign(getState().theme);
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

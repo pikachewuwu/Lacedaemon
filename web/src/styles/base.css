@@ -24,6 +24,7 @@
   --good: #8ed1a0;
   --bad: #ee7b69;
   --shadow: 0 1px 0 #ffffff06 inset, 0 18px 40px -24px #000000cc;
+  --chrome: #0f0d10;
 
   --f-ui: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-mono: "Geist Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;

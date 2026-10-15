@@ -10,6 +10,8 @@ import { MEMBERS } from "./members";
 import { ago } from "./format";
 import { Avatar, DaemonSign, Dragons, Mark, Modal, Toasts, toast, useNow } from "../ui/kit";
 import { Icon } from "../ui/icons";
+import { DesignPicker } from "../ui/DesignPicker";
+import { applyDesign } from "./themes";
 import { Lobby } from "../pages/Lobby";
 import { SundayPage } from "../pages/Sunday";
 import { PokerPage } from "../pages/Poker";
@@ -203,6 +205,7 @@ function Notifications() {
 
 function AccountMenu() {
   const [open, setOpen] = useState(false);
+  const [designs, setDesigns] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const name = useStore((s) => s.name);
   useEffect(() => {
@@ -220,11 +223,20 @@ function AccountMenu() {
         <div className="menu-list" role="menu">
           <button role="menuitem" onClick={() => { go("profile"); setOpen(false); }}>Profile</button>
           <button role="menuitem" onClick={() => { go("wallet"); setOpen(false); }}>Wallet</button>
+          <button role="menuitem" onClick={() => { setDesigns(true); setOpen(false); }}>Design</button>
           <hr />
           <button role="menuitem" onClick={() => { resetDemo(); setOpen(false); toast("Demo reset"); }}>Reset demo</button>
           <button role="menuitem" onClick={() => { signOut(); setOpen(false); }}>Sign out</button>
         </div>
       )}
+      <Modal open={designs} onClose={() => setDesigns(false)} wide label="Design">
+        <div className="modal-head">
+          <span className="label">Design</span>
+          <h2 className="display" style={{ fontSize: "var(--t-xl)" }}>How the site looks for you</h2>
+          <p className="muted">Only you see your choice. Chat, Minecraft and the world underneath keep their own look.</p>
+        </div>
+        <div className="modal-pad"><DesignPicker onPicked={() => setDesigns(false)} /></div>
+      </Modal>
     </div>
   );
 }
@@ -329,6 +341,10 @@ export function App() {
   const [veil, setVeil] = useState(false);
   const [drawer, setDrawer] = useState(false);
   useEffect(() => setSignInOpener(() => setSignInOpen(true)), []);
+  const theme = useStore((s) => s.theme);
+  const holder = useStore((s) => s.bonds.held.length > 0);
+  // Keep the page in the chosen design; Gilded falls back if its bond is gone.
+  useEffect(() => applyDesign(theme === "gilded" && !holder ? "laconia" : theme), [theme, holder]);
 
   const descend = useCallback(() => {
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return go("daemon");

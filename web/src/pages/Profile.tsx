@@ -1,3 +1,4 @@
+import { DesignPicker } from "../ui/DesignPicker";
 import { setState, useStore } from "../app/store";
 import { requireAccount } from "../app/account";
 import { go } from "../app/router";
@@ -94,6 +95,10 @@ export function ProfilePage() {
           </div>
         </section>
 
+        <section className="panel profile-design">
+          <div className="panel-head"><h2>Design</h2><span className="faint">only you see it</span></div>
+          <div className="panel-body"><DesignPicker /></div>
+        </section>
         <section className="panel">
           <div className="panel-head"><h2>Records</h2></div>
           <table className="table">

@@ -24,9 +24,9 @@ Underneath it runs **DAEMON**, a fixed-supply currency for the members who build
 | **World** | Chat | Channels, voice rooms, roles, bots and commands (`=collect`, `/bones`): a Discord replacement with its own purple-cloud look |
 | | Minecraft | The SMP in daylight: chat bridged to #minecraft, who is online, your item vault, account linking, prices and bounties |
 | | The Laconian | The server's newspaper, written from site data, with subscribable sections (on the site or by Discord DM) and **The Wire**, the Hacker News front page |
-| | Treasury | The house's books in public, and **dragon bonds**: the server borrows dragons for things worth doing ahead of time and pays them back at game night |
+| | Treasury | Open books for the server's real bills, and **server bonds**: long-term donations held as certificates, rewarded with a laurel every year, never paid back in money |
 | | Ideas | The public backlog: everything the server might become, voted on |
-| **You** | Wallet, Profile, Leaderboard | Everything you hold (vault included), roles and titles, and where you stand |
+| **You** | Wallet, Profile, Leaderboard | Everything you hold (vault included), roles and titles, your **design** (six to choose from), and where you stand |
 
 **Underneath** is the Daemon world: modules, the flow of value, a module builder for developers, the Arbiter, supply, governance, and the ledger at the floor. Reach it through the faint epoch counter in the status bar, the "What is it?" link in the wallet, or by typing `daemon` anywhere.
 

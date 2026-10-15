@@ -1,0 +1,124 @@
+/*
+  Designs members can choose. Each one redefines the surface's tokens and
+  adds one signature of its own. Objects keep their own look in every
+  design (cards, the board, the vase room, certificates), and so do the
+  worlds: chat, Minecraft and the Daemon world underneath.
+*/
+
+/* ---- Sky: the logo's blue, the light the hands reach for ------------------------------ */
+:root[data-theme="sky"] {
+  --bg: #0b1322; --bg-2: #101b2e; --bg-3: #16233a; --bg-4: #1f2f4b;
+  --line: #1f2d47; --line-2: #2c3e5f; --chrome: #0a1120;
+  --text: #eef2f8; --text-2: #a9b6cb; --text-3: #6f7f99;
+  --accent: #ffd98a; --accent-2: #fff1cc; --accent-ink: #1a1405; --accent-soft: #ffd98a1f;
+}
+:root[data-theme="sky"] body {
+  background: radial-gradient(ellipse 120% 70% at 70% -10%, #2a4a7a 0%, transparent 55%), linear-gradient(#0d1830, var(--bg) 40%) fixed;
+}
+
+/* ---- Thermopylae: black, crimson cloak, bronze ----------------------------------------- */
+:root[data-theme="thermopylae"] {
+  --bg: #0b0909; --bg-2: #141010; --bg-3: #1c1615; --bg-4: #261d1b;
+  --line: #2a201e; --line-2: #3d2d2a; --chrome: #090707;
+  --text: #f1e6d6; --text-2: #b9a893; --text-3: #7f6f60;
+  --accent: #d63a3a; --accent-2: #e8b080; --accent-ink: #fff4ea; --accent-soft: #d63a3a24;
+}
+:root[data-theme="thermopylae"] .page-title,
+:root[data-theme="thermopylae"] .hero-title { text-transform: uppercase; letter-spacing: .05em; }
+:root[data-theme="thermopylae"] body { background: linear-gradient(90deg, #d63a3a0d, transparent 30%), var(--bg); }
+
+/* ---- Terminal: phosphor on black, everything monospace -------------------------------- */
+:root[data-theme="terminal"] {
+  --bg: #050805; --bg-2: #081008; --bg-3: #0c170d; --bg-4: #122213;
+  --line: #143018; --line-2: #1f4a25; --chrome: #040704;
+  --text: #c6f7cf; --text-2: #79c487; --text-3: #3f7a4a;
+  --accent: #3dff8a; --accent-2: #b4ffd0; --accent-ink: #021006; --accent-soft: #3dff8a1c;
+  --blue: #5fd7ff; --good: #3dff8a; --bad: #ff5f5f;
+  --f-ui: "Geist Mono", ui-monospace, Menlo, monospace;
+  --f-display: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  --r-sm: 2px; --r-md: 2px; --r-lg: 3px;
+}
+:root[data-theme="terminal"] .page-title { font-weight: 300; letter-spacing: -.03em; }
+:root[data-theme="terminal"] .page-title::before { content: "> "; color: var(--accent); }
+:root[data-theme="terminal"] .panel,
+:root[data-theme="terminal"] .tile,
+:root[data-theme="terminal"] .btn { border-radius: 2px; }
+:root[data-theme="terminal"] body::after {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 200;
+  background: repeating-linear-gradient(transparent 0 2px, #00000038 2px 3px);
+  mix-blend-mode: multiply;
+}
+:root[data-theme="terminal"] body.in-daemon::after { display: none; }
+
+/* ---- Parchment: ink on paper, for daylight -------------------------------------------- */
+:root[data-theme="parchment"] {
+  --bg: #ece3d2; --bg-2: #f5eee1; --bg-3: #e6dbc6; --bg-4: #d9cbb1;
+  --line: #d3c4a8; --line-2: #bfad8c; --chrome: #e3d7c0;
+  --text: #2a2017; --text-2: #5b4c3b; --text-3: #8a7a64;
+  --accent: #b4441d; --accent-2: #d9773f; --accent-ink: #fff7ec; --accent-soft: #b4441d1a;
+  --blue: #2f6ea8; --green: #4f8a46; --good: #3f7f4a; --bad: #b43a2a;
+  --shadow: 0 1px 0 #ffffff80 inset, 0 14px 30px -22px #5b4c3b66;
+  color-scheme: light;
+}
+:root[data-theme="parchment"] body {
+  background:
+    radial-gradient(ellipse at 20% 0%, #fff8ea 0%, transparent 50%),
+    repeating-linear-gradient(0deg, #00000004 0 1px, transparent 1px 3px),
+    var(--bg);
+}
+:root[data-theme="parchment"] .toast,
+:root[data-theme="parchment"] .modal { color: var(--text); }
+
+/* ---- Gilded: for bondholders. Black lacquer, gold leaf, engraved lines ------------------ */
+:root[data-theme="gilded"] {
+  --bg: #0c0b09; --bg-2: #13110d; --bg-3: #1a1712; --bg-4: #241f17;
+  --line: #2c261b; --line-2: #4a3f2a; --chrome: #0a0907;
+  --text: #f3e9d2; --text-2: #c2b291; --text-3: #85775c;
+  --accent: #d9b77a; --accent-2: #f6e3b4; --accent-ink: #1a1307; --accent-soft: #d9b77a20;
+}
+:root[data-theme="gilded"] body {
+  background:
+    repeating-radial-gradient(circle at 100% 0%, transparent 0 22px, #d9b77a07 22px 23px),
+    var(--bg);
+}
+:root[data-theme="gilded"] .page-title { color: var(--accent-2); }
+
+/* ---- The picker ------------------------------------------------------------------------ */
+.designs { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.design {
+  position: relative; display: flex; flex-direction: column; gap: 8px; padding: 10px; border-radius: 14px; text-align: left;
+  background: var(--bg-2); border: 1px solid var(--line); color: var(--text); cursor: pointer; font: inherit;
+}
+.design:hover { border-color: var(--line-2); }
+.design.is-on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.design.is-locked { cursor: default; }
+.design.is-locked .design-mock { filter: grayscale(.6) brightness(.7); }
+.design-mock { display: grid; grid-template-columns: 26% 1fr; height: 92px; border-radius: 8px; overflow: hidden; border: 1px solid #00000040; }
+.design-mock .dm-side { display: flex; flex-direction: column; gap: 5px; padding: 8px 6px; }
+.design-mock .dm-side i { height: 4px; border-radius: 2px; opacity: .55; }
+.design-mock .dm-side i:first-child { opacity: 1; }
+.design-mock .dm-main { display: flex; flex-direction: column; gap: 6px; padding: 9px; }
+.design-mock .dm-title { font-size: 15px; line-height: 1; }
+.design-mock .dm-panel { flex: 1; border-radius: 4px; display: flex; align-items: flex-end; justify-content: flex-end; padding: 5px; }
+.design-mock .dm-btn { width: 34px; height: 10px; border-radius: 3px; }
+.design-name { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.design-name b { font-weight: 600; }
+.design-line { font-size: 12px; color: var(--text-2); }
+.design-lock { font: 600 10px var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
+
+/* The lobby sky in each design: same time of day, recoloured. */
+:root[data-theme="gilded"] .sky,
+:root[data-theme="thermopylae"] .sky,
+:root[data-theme="terminal"] .sky {
+  background-image: linear-gradient(var(--sky-tint), var(--sky-tint)), linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bottom) 100%);
+  background-blend-mode: color, normal;
+}
+:root[data-theme="gilded"] .sky { --sky-tint: #9a7434; }
+:root[data-theme="thermopylae"] .sky { --sky-tint: #6e1c1c; }
+:root[data-theme="terminal"] .sky { --sky-tint: #135a2a; }
+/* Parchment keeps the sky dark, so the text on it keeps the dark design's ink. */
+:root[data-theme="parchment"] .sky {
+  --text: #ece4da; --text-2: #c9bfb3; --text-3: #a39a90;
+  color: var(--text);
+}
+.modal-pad { padding: 16px 22px 22px; }

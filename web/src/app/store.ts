@@ -14,7 +14,7 @@ export interface LedgerEntry {
   id: string;
   at: number;
   text: string;
-  tag: "entry" | "prize" | "collect" | "pack" | "market" | "drop" | "wager" | "refund" | "quest" | "minecraft" | "bond";
+  tag: "entry" | "prize" | "collect" | "pack" | "market" | "drop" | "wager" | "refund" | "quest" | "minecraft";
   dragons?: number;
   daemon?: number;
   cards?: string[];
@@ -83,18 +83,18 @@ export interface State {
   pente: { day: string; guesses: string[]; streak: number; played: number; won: number; dist: number[] };
   /** Messages you posted from elsewhere on the site (shares, Minecraft chat), shown in Chat. */
   posts: { id: string; channel: string; text: string; at: number }[];
-  /** Dragon bonds you hold (lots), subscription orders, and coupons paid so far. */
-  bonds: { lots: BondLot[]; orders: Record<string, number>; earned: number };
+  /** Server bonds you hold (real-money donations with yearly cosmetic coupons). */
+  bonds: { held: HeldBond[] };
+  /** Chosen site design. */
+  theme: string;
 }
 
-export interface BondLot {
+export interface HeldBond {
   id: string;
-  series: string;
-  qty: number;
-  /** First serial number in the lot. */
+  issue: string;
+  /** Euros given. */
+  amount: number;
   serial: number;
-  /** Last season week whose coupon this lot has been paid (or bought after). */
-  paidThrough: number;
   at: number;
 }
 
@@ -155,13 +155,19 @@ const initial: State = {
   trade: { agents: [], offers: [], done: {}, day: "" },
   pente: { day: "", guesses: [], streak: 0, played: 0, won: 0, dist: [0, 0, 0, 0, 0, 0] },
   posts: [],
-  bonds: { lots: [], orders: {}, earned: 0 },
+  bonds: { held: [] },
+  theme: "laconia",
 };
 
 function load(): State {
   try {
     const raw = localStorage.getItem(KEY);
-    if (raw) return { ...initial, ...JSON.parse(raw) };
+    if (raw) {
+      const saved = JSON.parse(raw);
+      // An earlier preview kept dragon bonds in a different shape; drop it.
+      if (!Array.isArray(saved.bonds?.held)) delete saved.bonds;
+      return { ...initial, ...saved };
+    }
   } catch {
     /* storage unavailable: start fresh */
   }
@@ -218,7 +224,7 @@ export function signOut() {
 }
 
 export function resetDemo() {
-  state = { ...initial };
+  state = { ...initial, theme: state.theme };
   save();
   listeners.forEach((l) => l());
 }

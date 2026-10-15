@@ -1,188 +1,75 @@
-import { earn, getState, notify, setState, spend, type BondLot } from "./store";
-import { nextSunday, sundayIndex } from "./time";
-import { hashSeed } from "../games/rng";
-import { FACE, allocate, coupon, maturityWeek, sellBackValue, type BondSeries } from "../economy/bonds";
+import { getState, notify, setState } from "./store";
+import { issuing, type Cost, type Issue } from "../economy/bonds";
 
 /**
- * The Treasury: the house's books and the dragon bonds it issues. Series sit
- * at fixed season weeks; what you can do with each follows from the clock.
+ * The Treasury: what Lacedaemon costs to run in real money, and the server
+ * bonds members hold to pay for it. Mockup figures; no money moves here.
  */
 
-/** The coming game night's season week. Coupons up to the week before have been paid. */
-export const thisWeek = () => sundayIndex(nextSunday());
+export const COSTS: Cost[] = [
+  { id: "mc", item: "Minecraft server", note: "8 GB, always on, daily backups", perMonth: 14 },
+  { id: "arbiter", item: "The Arbiter", note: "open-weights model, one run a day, pinned version", perMonth: 6 },
+  { id: "site", item: "This site", note: "hosting, database, the bot bridge", perMonth: 5 },
+  { id: "domain", item: "Domain", note: "lacedaemon.gg, billed yearly", perMonth: 2.5 },
+];
 
-/** Seats filled at a past or expected game night (simulated, stable per week). */
-export const seatsIn = (week: number) => 5 + (hashSeed("seats:" + week) % 4);
+/** Euros in the Treasury today. */
+export const BALANCE = 412;
 
-type Draft = Omit<BondSeries, "status" | "sold"> & { placed: number };
-
-const DRAFTS: Draft[] = [
+export const ISSUES: Issue[] = [
   {
-    id: "final", name: "Season II final", funds: "A 1,000,000 dragon prize for the last Sunday of season II, announced before the season starts.",
-    term: 12, base: 0.009, perSeat: 0.001, seatsFrom: 6, size: 100, cap: 10, issueWeek: 1, placed: 64,
+    id: "lights", name: "Lights on", funds: "The Minecraft server and this site: the bills that keep everything running.",
+    term: 3, min: 10, suggested: [10, 25, 50], raised: 385, holders: 7, extra: "",
   },
   {
-    id: "lighthouse", name: "The Lighthouse", funds: "Dragon bounties on the SMP for the spawn lighthouse: sea lanterns, prismarine and gold, paid per stack delivered.",
-    term: 6, base: 0.0125, perSeat: 0, seatsFrom: 6, size: 30, cap: 5, issueWeek: 0, placed: 30,
+    id: "arbiter", name: "The Arbiter", funds: "Ten years of the daily run that pays DAEMON module builders, on a pinned open model.",
+    term: 10, min: 25, suggested: [25, 50, 100], raised: 300, holders: 4, extra: "Your name in the Arbiter's daily log, the day your bond starts.",
   },
   {
-    id: "builders", name: "Builders' grant", funds: "Seed pots for new member-built modules: their first four weeks of prizes, so a new game starts with players.",
-    term: 20, base: 0.007, perSeat: 0.0015, seatsFrom: 6, size: 50, cap: 10, issueWeek: 3, placed: 33,
+    id: "consol", name: "The Consol", funds: "Lacedaemon's endowment. No term, no end: it pays whatever the server needs most, for as long as there is a server.",
+    term: null, min: 50, suggested: [50, 100, 250], raised: 450, holders: 3, extra: "The Founder title, for good.",
   },
 ];
 
-export function series(): BondSeries[] {
-  const last = thisWeek() - 1;
-  return DRAFTS.map(({ placed, ...d }) => {
-    const status: BondSeries["status"] =
-      last >= d.issueWeek + d.term ? "matured" : last < d.issueWeek ? "subscribing" : placed >= d.size ? "placed" : "open";
-    return { ...d, sold: status === "subscribing" ? 0 : placed, status };
-  });
-}
+export const issueById = (id: string) => ISSUES.find((i) => i.id === id)!;
 
-export const seriesById = (id: string) => series().find((s) => s.id === id)!;
-
-/** Other members' orders for the series taking subscriptions. */
-export const OTHER_ORDERS: Record<string, { name: string; qty: number }[]> = {
-  builders: [
-    { name: "agis", qty: 25 },
-    { name: "gorgo", qty: 10 },
-    { name: "demaratus", qty: 6 },
-    { name: "lysander", qty: 4 },
-    { name: "kyniska", qty: 2 },
-    { name: "chilon", qty: 1 },
-  ],
-};
-
-/** Members selling bonds they hold, before maturity. */
-export function board(): { id: string; series: string; name: string; qty: number; price: number }[] {
-  return [
-    { id: "b1", series: "lighthouse", name: "brasidas", qty: 2, price: 10_180 },
-    { id: "b2", series: "final", name: "archidamus", qty: 3, price: 9_960 },
-    { id: "b3", series: "lighthouse", name: "chilon", qty: 1, price: 10_240 },
-    { id: "b4", series: "final", name: "lysander", qty: 1, price: 10_020 },
-  ];
-}
-
-/** What the house earns in a week, by source. Pays the coupons. */
-export const INCOME = [
-  { source: "The machine's edge", note: "3.125% of about 2.4M in spins", amount: 75_000 },
-  { source: "Private table fees", note: "500 a table, about 34 tables", amount: 17_000 },
-  { source: "Trade fee on items and DAEMON", note: "1% of volume", amount: 21_400 },
+/** The wall: everyone who holds a bond, oldest first. */
+export const WALL: { name: string; issue: string; since: string }[] = [
+  { name: "gorgo", issue: "consol", since: "Feb 2026" },
+  { name: "brasidas", issue: "lights", since: "Feb 2026" },
+  { name: "kyniska", issue: "arbiter", since: "Mar 2026" },
+  { name: "agis", issue: "lights", since: "Apr 2026" },
+  { name: "lysander", issue: "consol", since: "May 2026" },
+  { name: "chilon", issue: "lights", since: "Jun 2026" },
+  { name: "demaratus", issue: "arbiter", since: "Aug 2026" },
+  { name: "archidamus", issue: "lights", since: "Sep 2026" },
 ];
-export const weeklyIncome = () => INCOME.reduce((s, i) => s + i.amount, 0);
 
-export const heldIn = (id: string) => getState().bonds.lots.filter((l) => l.series === id).reduce((s, l) => s + l.qty, 0);
+/** What every bond comes with, and what each yearly coupon brings. */
+export const EVERY_BOND = [
+  "A numbered certificate in your collection",
+  "The Bondholder role on the server, and your name on the wall",
+  "The Gilded design for the whole site",
+];
+export const EACH_COUPON = [
+  "A laurel card stamped with the year: yours alone, never traded or staked",
+  "One cosmetic of your choice: a card back, a profile banner or a title",
+];
 
-/** Coupons due at the coming game night across every bond placed, yours included. */
-export function couponsDue(): number {
-  const wk = thisWeek();
-  return series()
-    .filter((s) => s.issueWeek < wk && maturityWeek(s) >= wk)
-    .reduce((sum, s) => sum + (s.sold + heldIn(s.id)) * coupon(s, seatsIn(wk)), 0);
-}
-
-let lotSeq = 0;
-const lot = (s: BondSeries, qty: number, serial: number): BondLot => ({
-  id: `${s.id}-${Date.now().toString(36)}-${lotSeq++}`, series: s.id, qty, serial, paidThrough: thisWeek() - 1, at: Date.now(),
-});
-
-function roomFor(s: BondSeries) {
-  return s.cap - heldIn(s.id) - (getState().bonds.orders[s.id] ?? 0);
-}
-
-/** Buy at face from a series still open. */
-export function buyNew(id: string, qty: number): string | null {
-  const s = seriesById(id);
-  const mine = getState().bonds.lots.filter((l) => l.series === id).reduce((n, l) => n + l.qty, 0);
-  if (s.status !== "open") return "This series isn't selling.";
-  if (qty < 1) return "Pick at least one.";
-  if (qty > roomFor(s)) return `Most one member can hold is ${s.cap}.`;
-  if (qty > s.size - s.sold - mine) return "Not that many left.";
-  if (!spend(qty * FACE, `Bought ${qty} ${s.name} bond${qty > 1 ? "s" : ""}`, "bond")) return "Not enough dragons.";
-  const serial = s.sold + mine + 1;
-  setState((st) => ({ bonds: { ...st.bonds, lots: [...st.bonds.lots, lot(s, qty, serial)] } }));
-  return null;
-}
-
-/** Buy from another member on the board. */
-export function buyFromBoard(ask: ReturnType<typeof board>[number]): string | null {
-  const s = seriesById(ask.series);
-  if (ask.qty > roomFor(s)) return `Most one member can hold is ${s.cap}.`;
-  if (!spend(ask.qty * ask.price, `Bought ${ask.qty} ${s.name} bond${ask.qty > 1 ? "s" : ""} from ${ask.name}`, "bond")) return "Not enough dragons.";
-  const serial = 1 + (hashSeed(ask.id) % Math.max(1, s.sold - ask.qty));
-  setState((st) => ({ bonds: { ...st.bonds, lots: [...st.bonds.lots, lot(s, ask.qty, serial)] } }));
-  notify(`${ask.name} sold you ${ask.qty} ${s.name} bond${ask.qty > 1 ? "s" : ""}.`, "treasury");
-  return null;
-}
-
-/** Place an order in a subscription. Dragons are held until game night. */
-export function order(id: string, qty: number): string | null {
-  const s = seriesById(id);
-  const had = getState().bonds.orders[id] ?? 0;
-  if (s.status !== "subscribing") return "This series isn't taking orders.";
-  if (qty < 1 || qty + had > s.cap - heldIn(id)) return `Orders are capped at ${s.cap} a member.`;
-  if (!spend(qty * FACE, `Ordered ${qty} ${s.name} bond${qty > 1 ? "s" : ""} (held until game night)`, "bond")) return "Not enough dragons.";
-  setState((st) => ({ bonds: { ...st.bonds, orders: { ...st.bonds.orders, [id]: had + qty } } }));
-  return null;
-}
-
-export function cancelOrder(id: string) {
-  const qty = getState().bonds.orders[id] ?? 0;
-  if (!qty) return;
-  const { [id]: _, ...rest } = getState().bonds.orders;
-  setState((st) => ({ bonds: { ...st.bonds, orders: rest } }));
-  earn(qty * FACE, `Cancelled ${qty} ${seriesById(id).name} order${qty > 1 ? "s" : ""}`, "refund");
-}
-
-/** What you'd be allotted if the subscription closed now. */
-export function previewAllotment(id: string): { mine: number; all: Record<string, number> } {
-  const s = seriesById(id);
-  const mine = getState().bonds.orders[id] ?? 0;
-  const all = allocate([...(OTHER_ORDERS[id] ?? []), ...(mine ? [{ name: getState().name, qty: mine }] : [])], s.size, s.cap);
-  return { mine: all[getState().name] ?? 0, all };
-}
-
-export function sellBack(lotId: string) {
-  const l = getState().bonds.lots.find((x) => x.id === lotId);
-  if (!l) return;
-  const s = seriesById(l.series);
-  const value = sellBackValue(s, thisWeek() - 1) * l.qty;
-  setState((st) => ({ bonds: { ...st.bonds, lots: st.bonds.lots.filter((x) => x.id !== lotId) } }));
-  earn(value, `Sold ${l.qty} ${s.name} bond${l.qty > 1 ? "s" : ""} back to the Treasury`, "bond");
-}
+export const mine = () => getState().bonds.held;
+export const balanceNow = () => BALANCE + mine().reduce((s, b) => s + b.amount, 0);
+export const isHolder = () => mine().length > 0;
 
 /**
- * Settle everything game nights have made due since your last visit:
- * coupons, faces at maturity, and subscriptions that closed.
+ * Record a bond. In the real site this follows a payment through a payment
+ * provider; the mockup only records it so the page can be explored.
  */
-export function settleBonds() {
-  const st = getState();
-  if (!st.signedIn) return;
-  const last = thisWeek() - 1;
-  let paid = 0;
-  const lots: BondLot[] = [];
-  for (const l of st.bonds.lots) {
-    const s = seriesById(l.series);
-    const end = Math.min(last, maturityWeek(s));
-    for (let w = l.paidThrough + 1; w <= end; w++) {
-      paid += l.qty * coupon(s, seatsIn(w)) + (w === maturityWeek(s) ? l.qty * FACE : 0);
-    }
-    if (end >= maturityWeek(s)) continue;
-    lots.push({ ...l, paidThrough: Math.max(l.paidThrough, end) });
-  }
-  const orders = { ...st.bonds.orders };
-  for (const [id, qty] of Object.entries(st.bonds.orders)) {
-    const s = seriesById(id);
-    if (last < s.issueWeek) continue;
-    const got = previewAllotment(id).mine;
-    if (got) lots.push({ ...lot(s, got, 1), paidThrough: s.issueWeek });
-    if (qty > got) earn((qty - got) * FACE, `${s.name}: ${qty - got} unfilled, returned`, "refund");
-    delete orders[id];
-  }
-  setState({ bonds: { lots, orders, earned: st.bonds.earned + paid } });
-  if (paid > 0) {
-    earn(paid, "Bond coupons from game night", "bond");
-    notify(`Game night paid your bonds ${paid.toLocaleString("en-US")} dragons.`, "treasury");
-  }
+export function holdBond(issueId: string, amount: number): string | null {
+  const issue = issueById(issueId);
+  if (!issuing(balanceNow(), COSTS)) return "Bonds are paused: the server is funded two years ahead.";
+  if (!(amount >= issue.min)) return `This series starts at €${issue.min}.`;
+  const serial = issue.holders + mine().filter((b) => b.issue === issueId).length + 1;
+  setState((s) => ({ bonds: { held: [...s.bonds.held, { id: `${issueId}-${Date.now().toString(36)}`, issue: issueId, amount, serial, at: Date.now() }] } }));
+  notify(`Thank you. ${issue.name} bond No. ${String(serial).padStart(3, "0")} is yours, and so is the Gilded design.`, "treasury");
+  return null;
 }
