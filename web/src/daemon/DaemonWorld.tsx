@@ -451,7 +451,7 @@ export function DaemonWorld() {
           <header className="dw-head">
             <p className="k">−1 · modules · the visible layer</p>
             <h2>What surfaces is what members build.</h2>
-            <p>Up there, a module is just a game with a small mark on it. Down here it has an owner, a DAEMON price, a routing program and DAEMON locked behind it. House games (Sunday, poker, Monopoly, slots) are not modules: they run on dragons alone. The convergence arena is retired; Blue or Orange carries its rock-paper-scissors core.</p>
+            <p>Up there, a module is just a game with a small mark on it. Down here it has an owner, a DAEMON price, a routing program and DAEMON locked behind it. House games (Sunday, poker, Monopoly, the arena, kottabos, Pente) are not modules: they run on dragons alone. The convergence arena is retired; Blue or Orange carries its rock-paper-scissors core.</p>
           </header>
           <Registry />
         </section>

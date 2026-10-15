@@ -5,8 +5,12 @@ One step at a time. Each step ships something usable before the next starts.
 ## Step 1: The mockup (now)
 
 - [x] Web app shell: lobby, Sunday, wallet, leaderboard, status line, sign-in flow
-- [x] Playable poker (sit & go, private tables with any stakes), Monopoly, Blue or Orange, Icarus, slots
-- [x] Spirits: 24 creatures, packs, drops, market
+- [x] Playable poker (sit & go, private tables with any stakes including Minecraft items), Monopoly, Blue or Orange
+- [x] Spirits: 24 creatures, packs, drops; the Arena with an Elo ladder
+- [x] The Symposium: knucklebones and kottabos in one room with a public log
+- [x] Pente (the daily word), quests and a season track
+- [x] Trade: one market, direct offers, trading agents
+- [x] Chat (channels, voice rooms, bots, commands), the Minecraft section, The Laconian with The Wire, Ideas
 - [x] House games vs Daemon modules, entry receipts
 - [x] The Daemon world: modules, flow, builder, Arbiter console, supply, governance, ledger
 - [x] Tested engines and economy math
@@ -22,13 +26,16 @@ One step at a time. Each step ships something usable before the next starts.
 
 ## Step 3: Live rooms
 
-- WebSocket rooms for the Hall, poker tables and Sunday
-- Server-authoritative dealing, dice and crash points (commit-reveal so results can be checked)
+- WebSocket rooms for chat, the Symposium, poker tables and Sunday
+- Server-authoritative dealing, dice and bone throws (commit-reveal so results can be checked)
+- Chat bridged both ways with Discord; the Minecraft chat bridged through a server plugin
+- A Minecraft plugin for the vault (`/deposit`, `/withdraw`, `/discord` link codes)
 - Private tables with real escrow
 
-## Step 4: Spirits for real
+## Step 4: Spirits and trade for real
 
-- Card ownership in the ledger, pack opening server-side, the market order book
+- Card and item ownership in the ledger, pack opening server-side, the order books
+- Trading agents run server-side; scoped API keys with budgets for members' own bots
 - Laurels minted after each Sunday
 
 ## Step 5: Daemon modules
@@ -50,3 +57,5 @@ One step at a time. Each step ships something usable before the next starts.
 - Emission thresholds the whitepaper mentions but never defines
 - The Blue or Orange "fair distribution" promised in December 2025: is that DAEMON for every past player?
 - Should house games ever route anything to Sunday, or stay 100% to the table?
+- The Laconian: written by hand, by a model from site data, or both?
+- Which ideas on the Ideas page come next

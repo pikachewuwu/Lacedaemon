@@ -26,7 +26,7 @@ Note for the backend: the Economy++ Two arena code resolves only two-pool rounds
 
 ## 4. Two kinds of games
 
-- **House games** (Sunday, poker, Monopoly, slots) belong to the server and run on dragons only. They are not modules.
+- **House games** (Sunday, poker, Monopoly, the arena, kottabos, Pente) belong to the server and run on dragons only. They are not modules.
 - **Modules** are games built by members. What surfaces on the site is a game with a small mark; underneath, it is a program.
 
 ## 5. Modules **[proposal]**
@@ -48,7 +48,7 @@ Example programs from the mockup:
 |---|---|---|---|---|
 | 01 | Blue or Orange | gorgo | 2,000 | 95% pot · 5% owner |
 | 02 | Spirits | kyniska | 1,500 | 40% Sunday · 60% owner |
-| 03 | Icarus | agis | 2,500 | 98% bank · 2% owner |
+| 03 | Knucklebones | agis | 2,500 | 97% pot · 3% owner |
 
 **Activity** = 10 × unique players + 6 × √entries + 4 × log10(1 + dragon volume), over 7 days.
 **Conviction** = locked DAEMON × √(lock days, capped at 90).
