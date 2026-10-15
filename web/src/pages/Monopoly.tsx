@@ -8,25 +8,14 @@ import { MonopolyGame, botStep } from "../games/monopoly/game";
 import { BOARD, GROUPS, PIT_FINE, isOwnable } from "../games/monopoly/board";
 import { byId, rollDrop, type CardInstance } from "../games/spirits/catalog";
 import { defaultRand } from "../games/rng";
-import { Avatar, Dragons } from "../ui/kit";
+import { Avatar, Dragons, Mark } from "../ui/kit";
 import { EntryModal, ModuleLine } from "../ui/Entry";
 import { SpiritCard } from "../ui/SpiritCard";
+import { Board, PIECES, Piece } from "../ui/MonopolyBoard";
 
 const ENTRY = 10_000;
 const ROUNDS = 30;
 const D = "₯";
-
-/** Board index to grid cell (1-based row/col on an 11×11 grid). */
-function cell(i: number): { row: number; col: number; side: "b" | "l" | "t" | "r" | "c" } {
-  if (i === 0) return { row: 11, col: 11, side: "c" };
-  if (i < 10) return { row: 11, col: 11 - i, side: "b" };
-  if (i === 10) return { row: 11, col: 1, side: "c" };
-  if (i < 20) return { row: 11 - (i - 10), col: 1, side: "l" };
-  if (i === 20) return { row: 1, col: 1, side: "c" };
-  if (i < 30) return { row: 1, col: 1 + (i - 20), side: "t" };
-  if (i === 30) return { row: 1, col: 11, side: "c" };
-  return { row: 1 + (i - 30), col: 11, side: "r" };
-}
 
 const Die = ({ n }: { n: number }) => (
   <span className="die" aria-label={`Die showing ${n}`}>
@@ -49,6 +38,22 @@ function Game({ onDone }: { onDone: (standings: string[]) => void }) {
   const [deed, setDeed] = useState<number | null>(null);
   const finished = useRef(false);
   const wrap = useRef<HTMLDivElement>(null);
+  const [tilt, setTilt] = useState(() => typeof window === "undefined" || window.innerWidth > 900);
+  // Pieces hop square by square toward where the rules put them.
+  const [shown, setShown] = useState<number[]>(() => game.players.map((p) => p.pos));
+  const moving = shown.some((pos, i) => pos !== game.players[i].pos);
+  useEffect(() => {
+    if (!moving) return;
+    const t = setTimeout(() => {
+      setShown((cur) => cur.map((pos, i) => {
+        const target = game.players[i].pos;
+        if (pos === target) return pos;
+        const ahead = (target - pos + 40) % 40;
+        return ahead > 12 || fast ? target : (pos + 1) % 40; // long jumps (cards, the Pit) teleport
+      }));
+    }, fast ? 40 : 120);
+    return () => clearTimeout(t);
+  });
   const me = 0;
 
   // On narrow screens the board scrolls sideways; start centred on the dice.
@@ -66,7 +71,7 @@ function Game({ onDone }: { onDone: (standings: string[]) => void }) {
       return;
     }
     const humanTurn = game.current.human && !game.current.bankrupt;
-    if (humanTurn) return;
+    if (humanTurn || moving) return;
     const t = setTimeout(() => {
       if (game.current.human && game.current.bankrupt) game.endTurn();
       else botStep(game);
@@ -82,92 +87,63 @@ function Game({ onDone }: { onDone: (standings: string[]) => void }) {
   const p = game.current;
   const myTurn = p.human && game.phase !== "over";
   const sq = BOARD[p.pos];
-  const tokens: Record<number, number[]> = {};
-  game.players.forEach((pl, i) => !pl.bankrupt && (tokens[pl.pos] ??= []).push(i));
   const dd = deed !== null ? BOARD[deed] : null;
   const dDeed = deed !== null ? game.deeds[deed] : null;
 
   return (
     <div className="mono-game">
       <div className="board-wrap" ref={wrap}>
-        <div className="mboard">
-          {BOARD.map((s, i) => {
-            const c = cell(i);
-            const d = game.deeds[i];
-            const owner = d?.owner ?? null;
-            return (
-              <button
-                key={i}
-                className={`sq sq-${c.side} sq-${s.kind} ${game.landed === i ? "is-landed" : ""} ${d?.mortgaged ? "is-mortgaged" : ""}`}
-                style={{ gridRow: c.row, gridColumn: c.col }}
-                onClick={() => isOwnable(s) && setDeed(i)}
-                aria-label={s.name}
-              >
-                {s.kind === "property" && <span className="sq-band" style={{ background: GROUPS[s.group].color }} />}
-                <span className="sq-name">{s.name}</span>
-                {isOwnable(s) && <span className="sq-price num">{D}{s.price}</span>}
-                {s.kind === "tax" && <span className="sq-price num">{D}{s.amount}</span>}
-                {owner !== null && <span className="sq-owner" style={{ background: `hsl(${hueFor(game.players[owner].name)} 55% 60%)` }} />}
-                {d && d.houses > 0 && (
-                  <span className="sq-houses">{d.houses === 5 ? <i className="hotel" /> : [...Array(d.houses)].map((_, k) => <i key={k} />)}</span>
-                )}
-                {tokens[i] && (
-                  <span className="sq-tokens">
-                    {tokens[i].map((pi) => (
-                      <i key={pi} className={`token ${game.players[pi].human ? "is-you" : ""}`} style={{ ["--h" as string]: hueFor(game.players[pi].name) }} title={game.players[pi].name} />
-                    ))}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-          <div className="mcenter">
-            <span className="mc-word display">Lacedaemon</span>
-            <span className="label">round {Math.min(game.round, ROUNDS)} of {ROUNDS}</span>
-            <div className="mc-dice">{game.dice ? <><Die n={game.dice[0]} /><Die n={game.dice[1]} /></> : <span className="faint mono">roll</span>}</div>
-            {game.card && (
-              <div className="mc-card">
-                <span className="label">{game.card.deck}</span>
-                <p>{game.card.text}</p>
-              </div>
-            )}
-            <div className="mc-turn">
-              <Avatar name={p.name} you={p.human} />
-              <span>{p.human ? "Your turn" : `${p.name}'s turn`}</span>
+        <Board game={game} shown={shown} onDeed={setDeed} tilt={tilt}>
+          <div className="mc-meander" aria-hidden="true" />
+          <Mark size={46} />
+          <span className="mc-word display">Lacedaemon</span>
+          <span className="label">round {Math.min(game.round, ROUNDS)} of {ROUNDS}</span>
+          <div className="mc-dice">{game.dice ? <><Die n={game.dice[0]} key={`a${game.log.length}`} /><Die n={game.dice[1]} key={`b${game.log.length}`} /></> : <span className="faint mono">roll the dice</span>}</div>
+          {game.card && (
+            <div className="mc-card">
+              <span className="label">{game.card.deck}</span>
+              <p>{game.card.text}</p>
             </div>
-            {myTurn && (
-              <div className="mc-actions">
-                {game.phase === "pit" && (
-                  <>
-                    <button className="btn" onClick={() => act(() => game.payToLeavePit())} disabled={p.passes === 0 && p.cash < PIT_FINE}>
-                      {p.passes > 0 ? "Use pardon" : `Pay ${D}${PIT_FINE}`}
-                    </button>
-                    <button className="btn btn-primary" onClick={() => act(() => game.roll())}>Roll for doubles</button>
-                  </>
-                )}
-                {game.phase === "roll" && <button className="btn btn-primary btn-lg" onClick={() => act(() => game.roll())}>Roll</button>}
-                {game.phase === "buy" && isOwnable(sq) && (
-                  <>
-                    <button className="btn btn-primary" onClick={() => act(() => game.buy())} disabled={p.cash < sq.price}>Buy {sq.name} · {D}{sq.price}</button>
-                    <button className="btn" onClick={() => act(() => game.pass())}>Pass</button>
-                  </>
-                )}
-                {game.phase === "end" && <button className="btn btn-primary" onClick={() => act(() => game.endTurn())}>End turn</button>}
-              </div>
-            )}
+          )}
+          <div className="mc-turn">
+            <Piece kind={PIECES[game.turn % 4]} color={p.human ? "#f4a35f" : `hsl(${hueFor(p.name)} 55% 66%)`} size={20} />
+            <span>{p.human ? "Your turn" : `${p.name}'s turn`}</span>
           </div>
-        </div>
+          {myTurn && !moving && (
+            <div className="mc-actions">
+              {game.phase === "pit" && (
+                <>
+                  <button className="btn" onClick={() => act(() => game.payToLeavePit())} disabled={p.passes === 0 && p.cash < PIT_FINE}>
+                    {p.passes > 0 ? "Use pardon" : `Pay ${D}${PIT_FINE}`}
+                  </button>
+                  <button className="btn btn-primary" onClick={() => act(() => game.roll())}>Roll for doubles</button>
+                </>
+              )}
+              {game.phase === "roll" && <button className="btn btn-primary btn-lg" onClick={() => act(() => game.roll())}>Roll</button>}
+              {game.phase === "buy" && isOwnable(sq) && (
+                <>
+                  <button className="btn btn-primary" onClick={() => act(() => game.buy())} disabled={p.cash < sq.price}>Buy {sq.name} · {D}{sq.price}</button>
+                  <button className="btn" onClick={() => act(() => game.pass())}>Pass</button>
+                </>
+              )}
+              {game.phase === "end" && <button className="btn btn-primary" onClick={() => act(() => game.endTurn())}>End turn</button>}
+            </div>
+          )}
+        </Board>
       </div>
 
       <aside className="mono-side">
         <div className="mono-side-head">
           <span className="label">Players</span>
-          <label className="toggle"><input id="mono-fast" type="checkbox" checked={fast} onChange={(e) => setFast(e.target.checked)} /> Fast bots</label>
+          <span className="mono-toggles">
+            <label className="toggle"><input id="mono-tilt" type="checkbox" checked={tilt} onChange={(e) => setTilt(e.target.checked)} /> Tilt</label>
+            <label className="toggle"><input id="mono-fast" type="checkbox" checked={fast} onChange={(e) => setFast(e.target.checked)} /> Fast bots</label>
+          </span>
         </div>
         <ul className="mplayers">
           {game.players.map((pl, i) => (
             <li key={pl.id} className={`${i === game.turn ? "is-turn" : ""} ${pl.bankrupt ? "is-out" : ""}`}>
-              <Avatar name={pl.name} you={pl.human} />
+              <span className="mp-piece"><Piece kind={PIECES[i % 4]} color={pl.human ? "#f4a35f" : `hsl(${hueFor(pl.name)} 55% 66%)`} size={26} /></span>
               <div className="mp-info">
                 <span className="mp-name">{pl.name}{pl.inPit && <span className="chip">in the Pit</span>}</span>
                 <span className="mp-props">

@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { programBySlug, splitEntry, type EntrySplit } from "../economy/modules";
 import type { CardInstance } from "../games/spirits/catalog";
+import type { Agent } from "../economy/trade";
 import type { Colour } from "../games/boo/round";
 
 /**
@@ -13,7 +14,7 @@ export interface LedgerEntry {
   id: string;
   at: number;
   text: string;
-  tag: "entry" | "prize" | "collect" | "pack" | "market" | "drop" | "wager" | "refund";
+  tag: "entry" | "prize" | "collect" | "pack" | "market" | "drop" | "wager" | "refund" | "quest" | "minecraft";
   dragons?: number;
   daemon?: number;
   cards?: string[];
@@ -64,9 +65,52 @@ export interface State {
   /** Dragons other modules have routed into this week's Sunday pot. */
   sundayExtra: number;
   welcomePack: boolean;
+  /** Quest progress for the current day and week, keyed by quest id. */
+  quests: { day: string; week: string; progress: Record<string, number>; claimed: string[] };
+  xp: number;
+  seasonClaimed: number[];
+  titles: string[];
+  title: string | null;
+  notes: Note[];
+  /** Minecraft: linked account and vaulted items (in item units). */
+  mc: { linked: string | null; vault: Record<string, number> };
+  arena: { rating: number; wins: number; losses: number; team: string[] };
+  news: { subs: string[]; delivery: "site" | "dm"; read: string[] };
+  ideas: { votes: Record<string, 1 | -1>; mine: { id: string; title: string; body: string; at: number }[] };
+  /** Cards shown on your profile. */
+  showcase: string[];
+  trade: { agents: Agent[]; offers: Offer[]; done: Record<string, number>; day: string };
+  pente: { day: string; guesses: string[]; streak: number; played: number; won: number; dist: number[] };
+  /** Messages you posted from elsewhere on the site (shares, Minecraft chat), shown in Chat. */
+  posts: { id: string; channel: string; text: string; at: number }[];
 }
 
-const KEY = "lacedaemon.v2";
+export type Asset =
+  | { kind: "dragons"; amount: number }
+  | { kind: "daemon"; amount: number }
+  | { kind: "item"; id: string; qty: number }
+  | { kind: "card"; card: CardInstance };
+
+export interface Offer {
+  id: string;
+  with: string;
+  incoming: boolean;
+  give: Asset[];
+  get: Asset[];
+  status: "open" | "accepted" | "declined";
+  at: number;
+  note?: string;
+}
+
+export interface Note {
+  id: string;
+  at: number;
+  text: string;
+  route?: string;
+  read: boolean;
+}
+
+const KEY = "lacedaemon.v3";
 
 const initial: State = {
   signedIn: false,
@@ -84,6 +128,20 @@ const initial: State = {
   listings: [],
   sundayExtra: 38_400,
   welcomePack: true,
+  quests: { day: "", week: "", progress: {}, claimed: [] },
+  xp: 0,
+  seasonClaimed: [],
+  titles: ["Newcomer"],
+  title: "Newcomer",
+  notes: [],
+  mc: { linked: null, vault: { diamond: 41, netherite: 3, iron: 220, gold: 96, emerald: 18, redstone: 640, sea_lantern: 64, obsidian: 32 } },
+  arena: { rating: 1000, wins: 0, losses: 0, team: [] },
+  news: { subs: ["front", "sunday", "markets", "minecraft"], delivery: "site", read: [] },
+  ideas: { votes: {}, mine: [] },
+  showcase: [],
+  trade: { agents: [], offers: [], done: {}, day: "" },
+  pente: { day: "", guesses: [], streak: 0, played: 0, won: 0, dist: [0, 0, 0, 0, 0, 0] },
+  posts: [],
 };
 
 function load(): State {
@@ -158,6 +216,7 @@ export function collect(): boolean {
   if (Date.now() < state.collectAt) return false;
   setState((s) => ({ dragons: s.dragons + COLLECT_AMOUNT, collectAt: Date.now() + COLLECT_MS }));
   record({ text: "Collected Soul income", tag: "collect", dragons: COLLECT_AMOUNT });
+  track("collect");
   return true;
 }
 
@@ -180,6 +239,7 @@ export function enter(slug: string, dragons: number, text: string): Receipt | nu
     sundayExtra: s.sundayExtra + split.sunday,
   }));
   record({ text, tag: "entry", dragons: -dragons, daemon: split.daemon || undefined });
+  track(`enter:${slug}`);
   return { ...split, dragons, module: m.name, ownerName: m.owner };
 }
 
@@ -192,6 +252,8 @@ export function payout(game: string, dragons: number, text: string, won: boolean
     };
   });
   if (dragons > 0) record({ text, tag: "prize", dragons });
+  track(`play:${game}`);
+  if (won) track(`win:${game}`);
 }
 
 export function refund(dragons: number, text: string) {
@@ -205,6 +267,7 @@ export function addCards(cards: CardInstance[], text: string, tag: LedgerEntry["
   if (!cards.length) return;
   setState((s) => ({ cards: [...cards, ...s.cards] }));
   record({ text, tag, cards: cards.map((c) => c.spirit) });
+  if (tag === "pack") track("pack_open");
 }
 
 export function removeCards(uids: string[]) {
@@ -230,3 +293,29 @@ export function moveDaemon(delta: number, text: string, tag: LedgerEntry["tag"])
 }
 
 export { record };
+
+export function post(channel: string, text: string) {
+  setState((s) => ({ posts: [...s.posts, { id: id(), channel, text, at: Date.now() }].slice(-80) }));
+}
+
+// ---- Notifications -------------------------------------------------------------
+
+export function notify(text: string, route?: string) {
+  setState((s) => ({ notes: [{ id: id(), at: Date.now(), text, route, read: false }, ...s.notes].slice(0, 40) }));
+}
+
+export function markNotesRead() {
+  setState((s) => ({ notes: s.notes.map((n) => ({ ...n, read: true })) }));
+}
+
+// ---- Quest events -----------------------------------------------------------------
+
+type Tracker = (event: string, amount: number) => void;
+let tracker: Tracker = () => {};
+/** Quests register here; everything else just calls track(). */
+export function setTracker(fn: Tracker) {
+  tracker = fn;
+}
+export function track(event: string, amount = 1) {
+  tracker(event, amount);
+}

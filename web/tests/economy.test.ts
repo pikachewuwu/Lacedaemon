@@ -66,20 +66,32 @@ describe("spirits", () => {
   });
 });
 
-import { crashPoint, EDGE, altitudeAt, secondsTo } from "../src/games/icarus";
+import { nameOf, rank, throwBones, WEIGHTS } from "../src/games/astragaloi";
+import { resolve } from "../src/games/kottabos";
 
-describe("icarus", () => {
-  it("returns about 97% over many flights for any fixed target", () => {
-    const rand = seeded(42);
-    const points = Array.from({ length: 200000 }, () => crashPoint(rand));
-    for (const target of [1.5, 2, 5]) {
-      const ret = points.reduce((s, c) => s + (c >= target ? target : 0), 0) / points.length;
-      expect(Math.abs(ret - (1 - EDGE))).toBeLessThan(0.03);
-    }
-    expect(points.reduce((a, b) => Math.min(a, b), Infinity)).toBe(1);
+describe("astragaloi", () => {
+  it("ranks Venus above everything and the Dog below everything", () => {
+    expect(nameOf([1, 3, 4, 6])).toBe("Venus");
+    expect(rank([6, 4, 3, 1])).toBeGreaterThan(rank([6, 6, 6, 6]));
+    expect(rank([6, 6, 6, 6])).toBeGreaterThan(rank([6, 6, 6, 4]));
+    expect(rank([1, 1, 1, 1])).toBeLessThan(rank([1, 1, 1, 3]));
   });
 
-  it("inverts time and altitude", () => {
-    expect(altitudeAt(secondsTo(4.2))).toBeCloseTo(4.2, 9);
+  it("throws the broad sides most often", () => {
+    const rand = seeded(5);
+    const counts: Record<number, number> = { 1: 0, 3: 0, 4: 0, 6: 0 };
+    for (let i = 0; i < 20000; i++) for (const b of throwBones(rand)) counts[b]++;
+    const total = 80000;
+    expect(Math.abs(counts[3] / total - WEIGHTS[1])).toBeLessThan(0.02);
+    expect(Math.abs(counts[1] / total - WEIGHTS[0])).toBeLessThan(0.02);
+  });
+});
+
+describe("kottabos", () => {
+  it("has a reachable hit window", () => {
+    let hits = 0;
+    for (let p = 0; p <= 1; p += 0.01) for (let a = 0; a <= 1; a += 0.01) if (resolve({ power: p, angle: a }).hit) hits++;
+    expect(hits).toBeGreaterThan(40);
+    expect(hits).toBeLessThan(2500); // hard, not trivial
   });
 });

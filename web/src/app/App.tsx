@@ -1,35 +1,81 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { go, useRoute, type Route } from "./router";
 import { requireAccount, setSignInOpener } from "./account";
-import { collect, resetDemo, signIn, signOut, useStore, COLLECT_AMOUNT } from "./store";
-import { countdown, fmtDate, nextSunday, pad } from "./time";
+import { collect, markNotesRead, resetDemo, signIn, signOut, useStore, COLLECT_AMOUNT } from "./store";
+import { countdown, dateKey, fmtDate, nextSunday, pad } from "./time";
+import { dailyQuests, WEEKLY } from "./quests";
+import { sundayInfo } from "./sunday";
 import { epochNumber } from "../economy/emission";
 import { MEMBERS } from "./members";
+import { ago } from "./format";
 import { Avatar, DaemonSign, Dragons, Mark, Modal, Toasts, toast, useNow } from "../ui/kit";
+import { Icon } from "../ui/icons";
 import { Lobby } from "../pages/Lobby";
 import { SundayPage } from "../pages/Sunday";
 import { PokerPage } from "../pages/Poker";
 import { MonopolyPage } from "../pages/Monopoly";
 import { BlueOrangePage } from "../pages/BlueOrange";
-import { HallPage } from "../pages/Hall";
+import { SymposiumPage } from "../pages/Symposium";
+import { ArenaPage } from "../pages/Arena";
+import { PentePage } from "../pages/Pente";
 import { SpiritsPage } from "../pages/Spirits";
+import { TradePage } from "../pages/Trade";
+import { QuestsPage } from "../pages/Quests";
+import { ChatPage } from "../pages/Chat";
+import { MinecraftPage } from "../pages/Minecraft";
+import { NewsPage } from "../pages/News";
+import { IdeasPage } from "../pages/Ideas";
 import { LeaderboardPage } from "../pages/Leaderboard";
 import { WalletPage } from "../pages/Wallet";
+import { ProfilePage } from "../pages/Profile";
 import { DaemonWorld } from "../daemon/DaemonWorld";
 import { WelcomePack } from "../pages/WelcomePack";
 
-const NAV: { route: Route; label: string }[] = [
-  { route: "lobby", label: "Lobby" },
-  { route: "sunday", label: "Sunday" },
-  { route: "poker", label: "Poker" },
-  { route: "monopoly", label: "Monopoly" },
-  { route: "blue-or-orange", label: "Blue or Orange" },
-  { route: "hall", label: "The Hall" },
-  { route: "spirits", label: "Spirits" },
-  { route: "leaderboard", label: "Leaderboard" },
+type NavItem = { route: Route; label: string };
+const NAV: { group: string; items: NavItem[] }[] = [
+  {
+    group: "Play",
+    items: [
+      { route: "lobby", label: "Lobby" },
+      { route: "sunday", label: "Sunday" },
+      { route: "poker", label: "Poker" },
+      { route: "monopoly", label: "Monopoly" },
+      { route: "blue-or-orange", label: "Blue or Orange" },
+      { route: "symposium", label: "Symposium" },
+      { route: "arena", label: "Arena" },
+      { route: "pente", label: "Pente" },
+    ],
+  },
+  {
+    group: "Collect",
+    items: [
+      { route: "spirits", label: "Spirits" },
+      { route: "trade", label: "Trade" },
+      { route: "quests", label: "Quests" },
+    ],
+  },
+  {
+    group: "World",
+    items: [
+      { route: "chat", label: "Chat" },
+      { route: "minecraft", label: "Minecraft" },
+      { route: "news", label: "The Laconian" },
+      { route: "ideas", label: "Ideas" },
+    ],
+  },
+  {
+    group: "You",
+    items: [
+      { route: "wallet", label: "Wallet" },
+      { route: "profile", label: "Profile" },
+      { route: "leaderboard", label: "Leaderboard" },
+    ],
+  },
 ];
 
-// ---- Sign-in -----------------------------------------------------------------
+const ICON: Partial<Record<Route, string>> = { pente: "ideas" };
+
+// ---- Sign-in ---------------------------------------------------------------
 
 function SignInModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
@@ -55,7 +101,103 @@ function SignInModal({ open, onClose }: { open: boolean; onClose: () => void }) 
   );
 }
 
-// ---- Top bar ---------------------------------------------------------------
+// ---- Sidebar ----------------------------------------------------------------
+
+function useBadges(): Partial<Record<Route, string | number>> {
+  const quests = useStore((s) => s.quests);
+  const signedIn = useStore((s) => s.signedIn);
+  const news = useStore((s) => s.news.read);
+  if (!signedIn) return {};
+  const claimable = [...dailyQuests(), ...WEEKLY].filter(
+    (q) => (quests.progress[q.id] ?? 0) >= q.goal && !quests.claimed.includes(q.id),
+  ).length;
+  const today = dateKey();
+  return {
+    quests: claimable || "",
+    chat: 3,
+    news: news.includes(today) ? "" : "new",
+  };
+}
+
+function Sidebar({ open, onNavigate, onDescend }: { open: boolean; onNavigate: () => void; onDescend: () => void }) {
+  const route = useRoute();
+  const badges = useBadges();
+  const now = useNow(30000);
+  const s = useStore((x) => x);
+  const info = sundayInfo(s, new Date(now));
+  const c = countdown(info.date.getTime() - now);
+  return (
+    <aside className={`sidebar ${open ? "is-open" : ""}`} aria-label="Main">
+      <button className="brand" onClick={() => { go("lobby"); onNavigate(); }} aria-label="Lacedaemon lobby">
+        <Mark size={26} />
+        <span className="wordmark">Lacedaemon</span>
+      </button>
+      <nav className="side-nav">
+        {NAV.map((g) => (
+          <div key={g.group} className="side-group">
+            <span className="side-label">{g.group}</span>
+            {g.items.map((n) => (
+              <button
+                key={n.route}
+                className={`side-item ${route === n.route ? "is-on" : ""}`}
+                onClick={() => { go(n.route); onNavigate(); }}
+                aria-current={route === n.route ? "page" : undefined}
+              >
+                <Icon name={ICON[n.route] ?? n.route} />
+                <span>{n.label}</span>
+                {badges[n.route] ? <span className={`side-badge ${typeof badges[n.route] === "string" ? "is-dot" : ""}`}>{badges[n.route]}</span> : null}
+              </button>
+            ))}
+          </div>
+        ))}
+      </nav>
+      <button className="side-sunday" onClick={() => { go("sunday"); onNavigate(); }}>
+        <span className="label">Game night</span>
+        <span className="side-sunday-game display">{info.game === "poker" ? "Poker" : "Monopoly"}</span>
+        <span className="num faint">{c.d}d {pad(c.h)}h {pad(c.m)}m · {info.entrants.length}/{info.seats}</span>
+      </button>
+      <button className="side-epoch mono" onClick={onDescend} title="There is something underneath">
+        <DaemonSign size={10} /> epoch {epochNumber(now)}
+      </button>
+    </aside>
+  );
+}
+
+// ---- Top bar ------------------------------------------------------------------
+
+function Notifications() {
+  const notes = useStore((s) => s.notes);
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const now = useNow(30000);
+  const unread = notes.filter((n) => !n.read).length;
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: MouseEvent) => !ref.current?.contains(e.target as Node) && setOpen(false);
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [open]);
+  return (
+    <div className="menu" ref={ref}>
+      <button className="icon-btn" onClick={() => { setOpen((o) => !o); if (!open) setTimeout(markNotesRead, 1200); }} aria-label={`Notifications${unread ? `, ${unread} new` : ""}`}>
+        <Icon name="bell" />
+        {unread > 0 && <span className="bell-count">{unread}</span>}
+      </button>
+      {open && (
+        <div className="menu-list notes" role="menu">
+          <span className="label notes-head">Notifications</span>
+          {notes.length === 0 && <p className="faint notes-empty">Nothing yet. Quests, game night and drops show up here.</p>}
+          {notes.slice(0, 12).map((n) => (
+            <button key={n.id} className={`note ${n.read ? "" : "is-new"}`} onClick={() => { if (n.route) go(n.route as Route); setOpen(false); }}>
+              <span>{n.text}</span>
+              <span className="faint mono">{ago(n.at, now)}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function AccountMenu() {
   const [open, setOpen] = useState(false);
@@ -74,8 +216,8 @@ function AccountMenu() {
       </button>
       {open && (
         <div className="menu-list" role="menu">
+          <button role="menuitem" onClick={() => { go("profile"); setOpen(false); }}>Profile</button>
           <button role="menuitem" onClick={() => { go("wallet"); setOpen(false); }}>Wallet</button>
-          <button role="menuitem" onClick={() => { go("leaderboard"); setOpen(false); }}>Your standing</button>
           <hr />
           <button role="menuitem" onClick={() => { resetDemo(); setOpen(false); toast("Demo reset"); }}>Reset demo</button>
           <button role="menuitem" onClick={() => { signOut(); setOpen(false); }}>Sign out</button>
@@ -97,42 +239,33 @@ function CollectButton() {
       onClick={() => collect() && toast(<>Collected <Dragons value={COLLECT_AMOUNT} /></>, "good")}
       title={ready ? "Collect your Soul income" : "Next collect"}
     >
-      {ready ? "Collect" : <span className="num">{left.h + left.d * 24}h {pad(left.m)}m</span>}
+      {ready ? "=collect" : <span className="num">{left.h + left.d * 24}h {pad(left.m)}m</span>}
     </button>
   );
 }
 
-function TopBar() {
-  const route = useRoute();
+function TopBar({ onMenu }: { onMenu: () => void }) {
   const signedIn = useStore((s) => s.signedIn);
   const dragons = useStore((s) => s.dragons);
   return (
     <header className="topbar">
-      <div className="topbar-row">
-        <button className="brand" onClick={() => go("lobby")} aria-label="Lacedaemon lobby">
-          <Mark size={26} />
-          <span className="wordmark">Lacedaemon</span>
-        </button>
-        <nav className="nav" aria-label="Main">
-          {NAV.map((n) => (
-            <button key={n.route} className={`nav-item ${route === n.route ? "is-on" : ""}`} onClick={() => go(n.route)} aria-current={route === n.route ? "page" : undefined}>
-              {n.label}
+      <button className="icon-btn menu-btn" onClick={onMenu} aria-label="Open navigation"><Icon name="menu" /></button>
+      <button className="brand brand-top" onClick={() => go("lobby")} aria-label="Lacedaemon lobby">
+        <Mark size={24} />
+      </button>
+      <div className="topbar-right">
+        {signedIn ? (
+          <>
+            <CollectButton />
+            <button className="balance" onClick={() => go("wallet")} title="Wallet">
+              <Dragons value={dragons} />
             </button>
-          ))}
-        </nav>
-        <div className="topbar-right">
-          {signedIn ? (
-            <>
-              <CollectButton />
-              <button className="balance" onClick={() => go("wallet")} title="Wallet">
-                <Dragons value={dragons} />
-              </button>
-              <AccountMenu />
-            </>
-          ) : (
-            <button className="btn btn-primary" onClick={() => requireAccount()}>Sign in</button>
-          )}
-        </div>
+            <Notifications />
+            <AccountMenu />
+          </>
+        ) : (
+          <button className="btn btn-primary" onClick={() => requireAccount()}>Sign in with Discord</button>
+        )}
       </div>
     </header>
   );
@@ -149,13 +282,14 @@ function StatusBar({ onDescend }: { onDescend: () => void }) {
     <footer className="statusbar mono" aria-label="Status">
       <span className="sb-item"><span className="sb-dot" />connected</span>
       <span className="sb-item">{online} online</span>
+      <span className="sb-item sb-hide">mc · 3 in game</span>
       <span className="sb-item sb-hide">berlin {fmtDate(new Date(now), { hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}</span>
       <span className="sb-item">sunday −{c.d}d {pad(c.h)}:{pad(c.m)}:{pad(c.s)}</span>
       <span className="sb-spacer" />
       <button className="sb-item sb-daemon" onClick={onDescend} title="There is something underneath">
         <DaemonSign size={11} /> epoch {epochNumber(now)}
       </button>
-      <span className="sb-item sb-hide">v0.2 mockup</span>
+      <span className="sb-item sb-hide">v0.3 mockup</span>
     </footer>
   );
 }
@@ -168,16 +302,29 @@ const PAGES: Record<Exclude<Route, "daemon">, () => ReactNode> = {
   poker: () => <PokerPage />,
   monopoly: () => <MonopolyPage />,
   "blue-or-orange": () => <BlueOrangePage />,
-  hall: () => <HallPage />,
+  symposium: () => <SymposiumPage />,
+  arena: () => <ArenaPage />,
+  pente: () => <PentePage />,
   spirits: () => <SpiritsPage />,
-  leaderboard: () => <LeaderboardPage />,
+  trade: () => <TradePage />,
+  quests: () => <QuestsPage />,
+  chat: () => <ChatPage />,
+  minecraft: () => <MinecraftPage />,
+  news: () => <NewsPage />,
+  ideas: () => <IdeasPage />,
   wallet: () => <WalletPage />,
+  profile: () => <ProfilePage />,
+  leaderboard: () => <LeaderboardPage />,
 };
+
+/** Routes that bring their own full-bleed world instead of the page frame. */
+const WORLDS: Route[] = ["chat", "minecraft"];
 
 export function App() {
   const route = useRoute();
   const [signInOpen, setSignInOpen] = useState(false);
   const [veil, setVeil] = useState(false);
+  const [drawer, setDrawer] = useState(false);
   useEffect(() => setSignInOpener(() => setSignInOpen(true)), []);
 
   const descend = useCallback(() => {
@@ -207,14 +354,19 @@ export function App() {
     document.title = route === "daemon" ? "Daemon" : "Lacedaemon";
   }, [route]);
 
+  const world = WORLDS.includes(route);
   return (
     <>
       {route === "daemon" ? (
         <DaemonWorld />
       ) : (
-        <div className="shell">
-          <TopBar />
-          <main className="page" key={route}>{PAGES[route]()}</main>
+        <div className={`shell ${world ? "is-world" : ""}`}>
+          <Sidebar open={drawer} onNavigate={() => setDrawer(false)} onDescend={descend} />
+          {drawer && <div className="drawer-scrim" onClick={() => setDrawer(false)} />}
+          <div className="shell-main">
+            <TopBar onMenu={() => setDrawer(true)} />
+            <main className={world ? `world world-${route}` : "page"} key={route}>{PAGES[route]()}</main>
+          </div>
           <StatusBar onDescend={descend} />
         </div>
       )}

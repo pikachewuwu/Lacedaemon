@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { addCards, earn, enter, getState, moveDaemon, payout, removeCards, spend, useStore } from "../app/store";
+import { addCards, earn, enter, getState, moveDaemon, payout, record, removeCards, setState, spend, useStore } from "../app/store";
+import { itemById } from "../games/minecraft/items";
+import { ItemSprite } from "../ui/Pixel";
 import { requireAccount } from "../app/account";
 import { MEMBERS } from "../app/members";
 import { fmt, fmtD } from "../app/format";
@@ -75,12 +77,26 @@ function SitAndGo({ onExit }: { onExit: () => void }) {
 
 // ---- Private table -----------------------------------------------------------
 
+/** Move Minecraft items into (−1) or out of (+1) escrow. */
+function moveItems(items: Record<string, number>, direction: 1 | -1) {
+  if (!Object.values(items).some((q) => q > 0)) return;
+  setState((st) => {
+    const vault = { ...st.mc.vault };
+    for (const [id, q] of Object.entries(items)) vault[id] = (vault[id] ?? 0) + direction * q;
+    return { mc: { ...st.mc, vault } };
+  });
+  record({ text: direction < 0 ? "Items into escrow" : "Won items at a private table", tag: "wager" });
+}
+
 function StakeView({ items }: { items: StakeItems }) {
   if (isEmpty(items)) return <span className="faint">nothing yet</span>;
   return (
     <div className="stake-items">
       {items.dragons > 0 && <Dragons value={items.dragons} />}
       {items.daemon > 0 && <Daemon value={items.daemon} />}
+      {Object.entries(items.items).filter(([, q]) => q > 0).map(([id, q]) => (
+        <span key={id} className="asset-chip" title={itemById(id).name}><ItemSprite id={id} size={20} /> {q} × {itemById(id).name}</span>
+      ))}
       {items.cards.map((c) => <SpiritCard key={c.uid} card={c} size="sm" />)}
     </div>
   );
@@ -90,7 +106,7 @@ function PrivateTable({ onExit }: { onExit: () => void }) {
   const s = useStore((x) => x);
   const [step, setStep] = useState<"setup" | "negotiate" | "play" | "done">("setup");
   const [invited, setInvited] = useState<string[]>(["brasidas", "kyniska"]);
-  const [mine, setMine] = useState<StakeItems>({ dragons: 10000, daemon: 0, cards: [] });
+  const [mine, setMine] = useState<StakeItems>({ dragons: 10000, daemon: 0, cards: [], items: {} });
   const [seats, setSeats] = useState<SeatStake[]>([]);
   const [standings, setStandings] = useState<string[]>([]);
 
@@ -125,6 +141,7 @@ function PrivateTable({ onExit }: { onExit: () => void }) {
       if (isEmpty(mine)) return toast("Put something on the table first", "bad");
       if (mine.dragons + TABLE_FEE > getState().dragons) return toast("Not enough dragons for that stake", "bad");
       if (mine.daemon > getState().daemon) return toast("You don't hold that much DAEMON", "bad");
+      if (Object.entries(mine.items).some(([id, q]) => (getState().mc.vault[id] ?? 0) < q)) return toast("Your vault doesn't hold that many", "bad");
       setSeats(invited.map((p) => ({ player: p, items: emptyStake(), status: "waiting" })));
       setStep("negotiate");
     });
@@ -136,6 +153,7 @@ function PrivateTable({ onExit }: { onExit: () => void }) {
     if (mine.dragons > 0) spend(mine.dragons, "Stake into escrow", "wager");
     if (mine.daemon > 0) moveDaemon(-mine.daemon, "Stake into escrow", "wager");
     if (mine.cards.length) removeCards(mine.cards.map((c) => c.uid));
+    moveItems(mine.items, -1);
     setStep("play");
   };
 
@@ -153,6 +171,7 @@ function PrivateTable({ onExit }: { onExit: () => void }) {
       if (pot.dragons) earn(pot.dragons, "Won a private table", "wager");
       if (pot.daemon) moveDaemon(pot.daemon, "Won a private table", "wager");
       if (pot.cards.length) addCards(pot.cards.map((c) => ({ ...c, origin: "Won at a private table" })), "Won cards at a private table", "wager");
+      moveItems(pot.items, 1);
     }
     payout("poker", 0, "", won);
   };
@@ -195,6 +214,19 @@ function PrivateTable({ onExit }: { onExit: () => void }) {
             <span className="faint">DAEMON <span className="mono">(you hold {fmtD(s.daemon)})</span></span>
             <input id="stake-daemon" className="input num" type="number" min={0} step={0.5} max={s.daemon} value={mine.daemon} disabled={step !== "setup" || s.daemon <= 0} onChange={(e) => setMine((m) => ({ ...m, daemon: Math.max(0, Math.min(s.daemon, +e.target.value || 0)) }))} />
           </label>
+          <div className="field">
+            <span className="faint">Minecraft items <span className="mono">(from your vault)</span></span>
+            <div className="stake-mc">
+              {Object.entries(s.mc.vault).filter(([, q]) => q > 0).map(([id, q]) => (
+                <label key={id} className="stake-mc-item" title={itemById(id).name}>
+                  <ItemSprite id={id} size={22} />
+                  <input id={`stake-${id}`} className="input num" type="number" min={0} max={q} value={mine.items[id] ?? 0} disabled={step !== "setup"}
+                    onChange={(e) => setMine((m) => ({ ...m, items: { ...m.items, [id]: Math.max(0, Math.min(q, Math.floor(+e.target.value || 0))) } }))} aria-label={itemById(id).name} />
+                  <span className="faint mono">/{q}</span>
+                </label>
+              ))}
+            </div>
+          </div>
           <div className="field">
             <span className="faint">Cards {s.cards.length === 0 && "· open a pack to have some"}</span>
             <div className="stake-cards">
@@ -274,7 +306,7 @@ export function PokerPage() {
           <button className="room room-private" onClick={() => requireAccount(() => setMode("private"))}>
             <span className="label">Private table</span>
             <h2>Put anything on the table</h2>
-            <p className="muted">Dragons, DAEMON, your cards. Every player sees every stake and has to accept before the deal. Winner takes all of it.</p>
+            <p className="muted">Dragons, DAEMON, your cards, Minecraft items from your vault. Every player sees every stake and has to accept before the deal. Winner takes all of it.</p>
             <span className="room-foot"><Dragons value={TABLE_FEE} /> table fee <span className="room-cta">Set up →</span></span>
           </button>
           <div className="room room-sunday">

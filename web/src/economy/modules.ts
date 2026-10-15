@@ -1,7 +1,7 @@
 /**
  * Two kinds of games.
  *
- * House games belong to the server: Sunday night, poker, Monopoly, slots.
+ * House games belong to the server: Sunday night, poker, Monopoly, kottabos.
  * They run on dragons only. Every entry dragon goes to the prize.
  *
  * Daemon modules are games built on DAEMON by members. An entry still costs
@@ -78,25 +78,27 @@ export const MODULES: ModuleProgram[] = [
   {
     kind: "module",
     id: "03",
-    slug: "icarus",
-    name: "Icarus",
+    slug: "knucklebones",
+    name: "Knucklebones",
     owner: "agis",
     price: 2500,
-    routes: { pot: 0.98 },
+    routes: { pot: 0.97 },
     locked: 12500,
     lockDays: 120,
     backers: 3,
     players7d: 7,
-    entries7d: 212,
-    volume7d: 640000,
-    summary: "The Hall's crash game. Fly toward the sun, let go before the wax melts. Bets fund the bank that pays the fliers.",
+    entries7d: 164,
+    volume7d: 310000,
+    summary: "Astragaloi at the Symposium table. Everyone antes, everyone throws, the best throw takes the pot. Venus beats all.",
   },
 ];
 
 export const HOUSE: GameProgram[] = [
   house("poker", "Poker", "Sit & go tournaments and private tables. Every entry dragon goes to the winner."),
   house("monopoly", "Monopoly", "The Laconian board. Every entry dragon goes to the winner."),
-  house("slots", "Slots", "The server's classic machine: 34×, 16×, 8×, 4×."),
+  house("kottabos", "Kottabos", "Flick wine at the bronze disc. Everyone who knocks it down splits the round's pot."),
+  house("arena", "Arena", "Ranked Spirits duels. Wins pay from the house."),
+  house("pente", "Pente", "The daily five-letter word. Free to play, solves pay from the house."),
 ];
 
 export const PROGRAMS: GameProgram[] = [...MODULES, ...HOUSE];

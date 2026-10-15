@@ -4,6 +4,7 @@ import { decide, STYLES, type BotStyle } from "../games/poker/bots";
 import { cardLabel, isRed, rankOf, suitOf, RANKS, SUIT_GLYPH, type Card } from "../games/poker/cards";
 import { defaultRand } from "../games/rng";
 import { fmt } from "../app/format";
+import { track } from "../app/store";
 import { Avatar } from "./kit";
 
 export function PlayingCard({ card, down = false, small = false, highlight = false }: { card?: Card; down?: boolean; small?: boolean; highlight?: boolean }) {
@@ -69,7 +70,11 @@ export function PokerTableView({
         t = setTimeout(() => onFinish(table.standings().map((i) => table.seats[i].name)), 1600);
       } else {
         const humanOut = table.seats[human]?.out;
-        t = setTimeout(() => { table.startHand(); rerender(); }, humanOut || fast ? 900 : 2600);
+        t = setTimeout(() => {
+          if (!humanOut) track("poker_hand");
+          table.startHand();
+          rerender();
+        }, humanOut || fast ? 900 : 2600);
       }
     } else if (table.toAct >= 0 && !table.seats[table.toAct].human) {
       const delay = fast || table.seats[human]?.out ? 160 : 650 + Math.random() * 700;

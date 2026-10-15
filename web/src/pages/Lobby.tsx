@@ -2,14 +2,15 @@ import { useState } from "react";
 import { go, type Route } from "../app/router";
 import { setState, useStore } from "../app/store";
 import { sundayInfo, SUNDAY_ENTRY } from "../app/sunday";
-import { countdown, dateKey, fmtDate, pad, berlinNow } from "../app/time";
+import { countdown, dateKey, fmtDate, pad } from "../app/time";
+import { dailyQuests } from "../app/quests";
+import { answerFor } from "../games/pente/pente";
 import { useFeed } from "../app/feed";
 import { MEMBERS } from "../app/members";
 import { ago, fmt } from "../app/format";
-import { closeMinute } from "../games/boo/round";
 import { PROGRAMS } from "../economy/modules";
 import { PACK_PRICE } from "../games/spirits/catalog";
-import { Avatar, Daemon, DragonSign, Dragons, useNow } from "../ui/kit";
+import { Avatar, Daemon, Dragons, useNow } from "../ui/kit";
 import { SkyBand } from "../ui/Sky";
 import { EntryModal, KindChip } from "../ui/Entry";
 import { SpiritCard } from "../ui/SpiritCard";
@@ -104,17 +105,22 @@ function GameArt({ kind }: { kind: string }) {
         <i className="b" /><i className="o" /><i className="g" />
       </div>
     );
-  if (kind === "icarus")
+  if (kind === "knucklebones")
     return (
-      <div className="ga ga-icarus">
-        <i className="sun" />
-        <svg viewBox="0 0 200 100" preserveAspectRatio="none"><path d="M10 92 Q 90 88 150 30" /></svg>
+      <div className="ga ga-bones">
+        {[0, 1, 2, 3].map((i) => (
+          <svg key={i} viewBox="-20 -16 40 32" style={{ transform: `rotate(${[-18, 12, -6, 24][i]}deg)` }}>
+            <path d="M-17 -9 Q -10 -15 -4 -10 Q 0 -6 4 -10 Q 10 -15 17 -9 Q 19 0 17 9 Q 10 15 4 10 Q 0 6 -4 10 Q -10 15 -17 9 Q -19 0 -17 -9 Z" />
+          </svg>
+        ))}
       </div>
     );
-  if (kind === "slots")
+  if (kind === "arena")
     return (
-      <div className="ga ga-slots">
-        {[0, 1, 2].map((i) => <span key={i}><DragonSign size={30} /></span>)}
+      <div className="ga ga-arena">
+        <SpiritCard spiritId="phlegyon" size="sm" />
+        <span className="display ga-vs">vs</span>
+        <SpiritCard spiritId="okeanyx" size="sm" />
       </div>
     );
   return (
@@ -129,15 +135,15 @@ function GameArt({ kind }: { kind: string }) {
 interface Tile { route: Route; slug: string; art: string; title: string; line: string; cta: string; meta: string }
 
 const HOUSE_TILES: Tile[] = [
-  { route: "poker", slug: "poker", art: "poker", title: "Poker", line: "Sit & go tournaments, or a private table where anything can be staked.", cta: "Sit down", meta: "from 2,500" },
+  { route: "poker", slug: "poker", art: "poker", title: "Poker", line: "Sit & go tournaments, or a private table where dragons, cards and Minecraft items can be staked.", cta: "Sit down", meta: "from 2,500" },
   { route: "monopoly", slug: "monopoly", art: "monopoly", title: "Monopoly", line: "The Laconian board. Buy the Eurotas, build on Orthia, bankrupt your friends.", cta: "Play a game", meta: "10,000" },
-  { route: "hall", slug: "slots", art: "slots", title: "The Hall", line: "One room, everyone in it. The machine with the server's odds, and Icarus.", cta: "Walk in", meta: "any stake" },
+  { route: "arena", slug: "arena", art: "arena", title: "Arena", line: "Three spirits a side. Guess who they send, and send what beats it.", cta: "Find a duel", meta: "ranked" },
 ];
 
 const MEMBER_TILES: Tile[] = [
   { route: "blue-or-orange", slug: "blue-or-orange", art: "blue-or-orange", title: "Blue or Orange", line: "Once a day. Back a colour. The smallest pool wins, the two biggest fight.", cta: "Stake today", meta: "from 500" },
-  { route: "spirits", slug: "spirits", art: "spirits", title: "Spirits", line: "Open packs, collect all 24, trade on the market, stake them at the table.", cta: "Open a pack", meta: `pack ${fmt(PACK_PRICE)}` },
-  { route: "hall", slug: "icarus", art: "icarus", title: "Icarus", line: "Fly toward the sun with everyone in the Hall. Let go before the wax melts.", cta: "Take off", meta: "from 500" },
+  { route: "spirits", slug: "spirits", art: "spirits", title: "Spirits", line: "Open packs, collect all 24, duel in the arena, trade or stake them.", cta: "Open a pack", meta: `pack ${fmt(PACK_PRICE)}` },
+  { route: "symposium", slug: "knucklebones", art: "knucklebones", title: "Knucklebones", line: "At the Symposium. Everyone antes, everyone throws. Venus beats all.", cta: "Take a seat", meta: "from 500" },
 ];
 
 function TileCard({ t }: { t: Tile }) {
@@ -160,26 +166,39 @@ function TileCard({ t }: { t: Tile }) {
   );
 }
 
-function BooToday() {
-  const now = useNow(30000);
-  const commit = useStore((s) => s.boo);
-  const today = dateKey(new Date(now));
-  const mine = commit && commit.date === today ? commit : null;
-  const b = berlinNow(new Date(now));
-  const minutes = b.hour * 60 + b.minute;
-  const closed = minutes >= closeMinute(today);
+function Today() {
+  const s = useStore((x) => x);
+  const now = useNow(60000);
+  const day = dateKey(new Date(now));
+  const pente = s.pente.day === day ? s.pente.guesses : [];
+  const solved = pente.length > 0 && pente[pente.length - 1] === answerFor(day);
+  const quests = dailyQuests(day);
+  const done = quests.filter((q) => (s.quests.day === day ? s.quests.progress[q.id] ?? 0 : 0) >= q.goal).length;
+  const boo = s.boo && s.boo.date === day;
+  const ready = now >= s.collectAt;
   return (
-    <button className="panel rail-boo" onClick={() => go("blue-or-orange")}>
-      <div className="panel-head"><h3>Blue or Orange today</h3><span className={`chip ${closed ? "" : "chip-live"}`}>{closed ? "Closed" : "Open"}</span></div>
-      <div className="panel-body boo-mini">
-        <div className="boo-orbs"><i className="b" /><i className="o" /><i className="g" /></div>
-        {mine ? (
-          <p>You backed <b className={`t-${mine.colour}`}>{mine.colour}</b> with <Dragons value={mine.amount} />.</p>
-        ) : (
-          <p className="muted">{closed ? "Today's round has closed. The next opens at midnight." : "Closes at a random minute between 20:00 and 22:00."}</p>
-        )}
-      </div>
-    </button>
+    <div className="today">
+      <button className="today-card" onClick={() => go("pente")}>
+        <span className="label">Pente · daily</span>
+        <span className="today-v">{solved ? `Solved in ${pente.length}` : pente.length >= 6 ? "Not today" : pente.length ? `${pente.length}/6 guesses` : "Today's word is waiting"}</span>
+        <span className="today-tiles">{[0, 1, 2, 3, 4].map((i) => <i key={i} className={solved ? "hit" : i < pente.length ? "near" : ""} />)}</span>
+      </button>
+      <button className="today-card" onClick={() => go("quests")}>
+        <span className="label">Quests</span>
+        <span className="today-v">{done} of {quests.length} done</span>
+        <span className="today-bar"><i style={{ width: `${(done / quests.length) * 100}%` }} /></span>
+      </button>
+      <button className="today-card" onClick={() => go("blue-or-orange")}>
+        <span className="label">Blue or Orange</span>
+        <span className="today-v">{boo ? <>Backed <b className={`t-${s.boo!.colour}`}>{s.boo!.colour}</b></> : "Not staked yet"}</span>
+        <span className="boo-orbs"><i className="b" /><i className="o" /><i className="g" /></span>
+      </button>
+      <button className="today-card" onClick={() => go("chat")}>
+        <span className="label">=collect</span>
+        <span className="today-v">{ready ? "Ready to collect" : `in ${Math.ceil((s.collectAt - now) / 3600000)} h`}</span>
+        <span className="faint mono" style={{ fontSize: 11 }}>{ready ? "17,000 dragons" : "Soul income"}</span>
+      </button>
+    </div>
   );
 }
 
@@ -234,7 +253,8 @@ export function Lobby() {
       <Hero />
       <div className="lobby-grid">
         <div className="lobby-main">
-          <div className="section-title">
+          <Today />
+          <div className="section-title shelf-title">
             <h2>House games</h2>
             <p className="muted">Run by the server. Dragons only, every entry goes to the prize.</p>
           </div>
@@ -258,7 +278,6 @@ export function Lobby() {
           </div>
         </div>
         <aside className="lobby-rail">
-          <BooToday />
           <Feed />
           <Standing />
         </aside>

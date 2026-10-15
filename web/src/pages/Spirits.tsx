@@ -1,20 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
-import { addCards, earn, getState, record, removeCards, setState, spend, useStore } from "../app/store";
+import { go } from "../app/router";
+import { addCards, setState, spend, useStore } from "../app/store";
 import { requireAccount } from "../app/account";
-import { dateKey } from "../app/time";
 import { fmt } from "../app/format";
-import { allBooks, fillChance, MARKET_FEE, roundPrice, sellerNet, type Ask } from "../economy/market";
 import { programBySlug, splitEntry } from "../economy/modules";
 import { defaultRand } from "../games/rng";
 import {
   byId, cardValue, openPack, PACK_PRICE, PACK_SLOTS, RARITY_ORDER, REFERENCE, SPIRITS,
-  type CardInstance, type Element, type Rarity,
+  type CardInstance, type Element,
 } from "../games/spirits/catalog";
-import { Avatar, Daemon, Dragons, Modal, toast } from "../ui/kit";
+import { Daemon, Dragons, Modal, toast } from "../ui/kit";
 import { ELEMENT_LABEL, SpiritCard } from "../ui/SpiritCard";
 import { ModuleLine } from "../ui/Entry";
 
-type Tab = "packs" | "collection" | "market";
+type Tab = "packs" | "collection";
 
 /** Five face-down cards; each flips on click, rarest last. */
 export function PackReveal({ cards }: { cards: CardInstance[] }) {
@@ -190,159 +189,28 @@ function Collection({ onSell }: { onSell: (c: CardInstance) => void }) {
   );
 }
 
-function Market({ sellCard, clearSell }: { sellCard: CardInstance | null; clearSell: () => void }) {
-  const day = dateKey();
-  const books = useMemo(() => allBooks(day), [day]);
-  const [bought, setBought] = useState<Set<string>>(new Set());
-  const [rarity, setRarity] = useState<Rarity | "all">("all");
-  const listings = useStore((s) => s.listings);
-  const [price, setPrice] = useState(0);
-  useEffect(() => {
-    if (sellCard) setPrice(roundPrice(cardValue(sellCard)));
-  }, [sellCard]);
-
-  const buy = (ask: Ask) =>
-    requireAccount(() => {
-      if (!spend(ask.price, `Bought ${byId(ask.card.spirit).name} from ${ask.seller}`, "market")) return toast("Not enough dragons", "bad");
-      addCards([{ ...ask.card, origin: `Market, from ${ask.seller}` }], `Received ${byId(ask.card.spirit).name}`, "market");
-      setBought((b) => new Set(b).add(ask.id));
-      toast(<>Bought {byId(ask.card.spirit).name}</>, "good");
-    });
-
-  const list = () => {
-    if (!sellCard) return;
-    removeCards([sellCard.uid]);
-    setState((s) => ({ listings: [{ id: sellCard.uid, card: sellCard, price, at: Date.now() }, ...s.listings] }));
-    record({ text: `Listed ${byId(sellCard.spirit).name} for ${fmt(price)}`, tag: "market", cards: [sellCard.spirit] });
-    clearSell();
-    toast("Listed on the market");
-  };
-  const cancel = (id: string) => {
-    const l = getState().listings.find((x) => x.id === id);
-    if (!l) return;
-    setState((s) => ({ listings: s.listings.filter((x) => x.id !== id) }));
-    addCards([l.card], `Took ${byId(l.card.spirit).name} off the market`, "market");
-  };
-
-  const rows = books
-    .filter((b) => rarity === "all" || byId(b.spirit).rarity === rarity)
-    .sort((a, b) => RARITY_ORDER.indexOf(byId(b.spirit).rarity) - RARITY_ORDER.indexOf(byId(a.spirit).rarity) || byId(a.spirit).no - byId(b.spirit).no);
-
-  return (
-    <div className="market">
-      {(sellCard || listings.length > 0) && (
-        <section className="panel market-sell">
-          {sellCard && (
-            <div className="sell-form">
-              <SpiritCard card={sellCard} size="sm" />
-              <div className="sell-fields">
-                <span className="label">List for sale</span>
-                <h3>{byId(sellCard.spirit).name}{sellCard.foil ? " · foil" : ""}</h3>
-                <label className="field">
-                  <span className="faint">Asking price</span>
-                  <input id="ask-price" className="input num" type="number" min={10} step={10} value={price} onChange={(e) => setPrice(Math.max(10, +e.target.value || 0))} />
-                </label>
-                <p className="faint" style={{ fontSize: "var(--t-xs)" }}>Reference {fmt(cardValue(sellCard))}. You receive {fmt(sellerNet(price))} after the {MARKET_FEE * 100}% fee.</p>
-                <div className="sell-actions">
-                  <button className="btn btn-ghost" onClick={clearSell}>Cancel</button>
-                  <button className="btn btn-primary" onClick={list}>List</button>
-                </div>
-              </div>
-            </div>
-          )}
-          {listings.length > 0 && (
-            <div className="my-listings">
-              <span className="label">Your listings</span>
-              {listings.map((l) => (
-                <div key={l.id} className="my-listing">
-                  <span>{byId(l.card.spirit).name}{l.card.foil ? " (foil)" : ""}</span>
-                  <Dragons value={l.price} />
-                  <span className="chip">waiting for a buyer</span>
-                  <button className="btn btn-sm btn-ghost" onClick={() => cancel(l.id)}>Cancel</button>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-      )}
-
-      <div className="market-bar">
-        <div className="seg" role="radiogroup" aria-label="Rarity">
-          {(["all", ...RARITY_ORDER] as const).map((r) => (
-            <button key={r} role="radio" aria-checked={rarity === r} className={`seg-item ${rarity === r ? "is-on" : ""}`} onClick={() => setRarity(r)}>{r === "all" ? "All" : r}</button>
-          ))}
-        </div>
-        <span className="faint mono" style={{ fontSize: "var(--t-xs)" }}>{MARKET_FEE * 100}% fee per sale funds the Spirits module</span>
-      </div>
-      <div className="table-wrap panel">
-        <table className="table market-table">
-          <thead>
-            <tr><th>Spirit</th><th>Rarity</th><th className="r">Last</th><th className="r">24h</th><th className="r">Best bid</th><th className="r">Lowest ask</th><th /></tr>
-          </thead>
-          <tbody>
-            {rows.map((b) => {
-              const s = byId(b.spirit);
-              const ask = b.asks.find((a) => !bought.has(a.id));
-              return (
-                <tr key={b.spirit}>
-                  <td><span className="mk-spirit"><span className={`pip pip-${s.element}`} />{s.name}</span></td>
-                  <td><span className={`rar rar-${s.rarity}`}>{s.rarity}</span></td>
-                  <td className="r num">{fmt(b.last)}</td>
-                  <td className={`r num ${b.change >= 0 ? "pos" : "neg"}`}>{b.change >= 0 ? "+" : ""}{b.change.toFixed(1)}%</td>
-                  <td className="r num faint">{b.bids[0] ? fmt(b.bids[0].price) : "·"}</td>
-                  <td className="r">{ask ? <span className="who-ask"><Avatar name={ask.seller} /> <span className="num">{fmt(ask.price)}</span></span> : <span className="faint">sold out</span>}</td>
-                  <td className="r">{ask && <button className="btn btn-sm" onClick={() => buy(ask)}>Buy</button>}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-/** Your listings sell over time, faster when priced near reference. */
-function useListingFills() {
-  useEffect(() => {
-    const t = setInterval(() => {
-      const { listings } = getState();
-      for (const l of listings) {
-        if (Date.now() - l.at < 4000) continue;
-        if (Math.random() < fillChance(l.card, l.price) * 0.35) {
-          setState((s) => ({ listings: s.listings.filter((x) => x.id !== l.id) }));
-          earn(sellerNet(l.price), `Sold ${byId(l.card.spirit).name}`, "market");
-          toast(<>Sold {byId(l.card.spirit).name} for <Dragons value={sellerNet(l.price)} /></>, "good");
-        }
-      }
-    }, 3000);
-    return () => clearInterval(t);
-  }, []);
-}
-
 export function SpiritsPage() {
   const [tab, setTab] = useState<Tab>("packs");
-  const [selling, setSelling] = useState<CardInstance | null>(null);
-  useListingFills();
   return (
     <div className="spirits-page">
       <header className="page-head">
         <div>
           <p className="label">Series I · 24 spirits</p>
           <h1 className="display page-title">Spirits</h1>
-          <p className="muted">Water puts out fire, fire burns grass, grass drinks water: the same cycle as Blue or Orange. Collect them, trade them, stake them at a private table.</p>
+          <p className="muted">Water puts out fire, fire burns grass, grass drinks water: the same cycle as Blue or Orange. Collect them, duel with them in the arena, trade them, stake them at a private table.</p>
         </div>
         <ModuleLine slug="spirits" />
       </header>
       <div className="tabs" role="tablist">
-        {(["packs", "collection", "market"] as Tab[]).map((t) => (
+        {(["packs", "collection"] as Tab[]).map((t) => (
           <button key={t} role="tab" className="tab" aria-selected={tab === t} onClick={() => setTab(t)}>{t[0].toUpperCase() + t.slice(1)}</button>
         ))}
+        <button className="tab" onClick={() => go("arena")}>Arena →</button>
+        <button className="tab" onClick={() => go("trade")}>Trade →</button>
       </div>
       <div className="tab-body">
         {tab === "packs" && <Packs />}
-        {tab === "collection" && <Collection onSell={(c) => { setSelling(c); setTab("market"); }} />}
-        {tab === "market" && <Market sellCard={selling} clearSell={() => setSelling(null)} />}
+        {tab === "collection" && <Collection onSell={() => go("trade")} />}
       </div>
       <p className="panel-note faint">Reference prices: {RARITY_ORDER.map((r) => `${r} ${fmt(REFERENCE[r])}`).join(" · ")}. Foil ×3.</p>
     </div>

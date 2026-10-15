@@ -6,9 +6,11 @@ import { byId, cardValue } from "../games/spirits/catalog";
 import { requireAccount } from "../app/account";
 import { Daemon, Dragons, useNow } from "../ui/kit";
 import { SpiritCard } from "../ui/SpiritCard";
+import { ItemSprite } from "../ui/Pixel";
+import { itemById } from "../games/minecraft/items";
 
 const TAG_LABEL: Record<LedgerEntry["tag"], string> = {
-  entry: "entry", prize: "prize", collect: "collect", pack: "pack", market: "market", drop: "drop", wager: "table", refund: "refund",
+  entry: "entry", prize: "prize", collect: "collect", pack: "pack", market: "market", drop: "drop", wager: "table", refund: "refund", quest: "quest", minecraft: "minecraft",
 };
 
 export function WalletPage() {
@@ -47,6 +49,13 @@ export function WalletPage() {
           <span className="holding-v num">{s.cards.length} <span className="faint">cards</span></span>
           <span className="faint">Worth about <Dragons value={cardsValue} /> on the market.</span>
         </div>
+        <button className="holding holding-mc" onClick={() => go("minecraft")}>
+          <span className="label">Minecraft vault</span>
+          <span className="holding-v num holding-items">
+            {Object.entries(s.mc.vault).filter(([, q]) => q > 0).slice(0, 5).map(([id, q]) => <span key={id}><ItemSprite id={id} size={22} />{q}</span>)}
+          </span>
+          <span className="faint">Worth about <Dragons value={Object.entries(s.mc.vault).reduce((t, [id, q]) => t + itemById(id).ref * q, 0)} />. Trade it, stake it, withdraw it in game.</span>
+        </button>
         <div className="holding holding-daemon">
           <span className="label">DAEMON</span>
           <Daemon value={s.daemon} className="holding-v" />
