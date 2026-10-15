@@ -109,27 +109,27 @@ function Game({ onDone }: { onDone: (standings: string[]) => void }) {
             <Piece kind={PIECES[game.turn % 4]} color={p.human ? "#f4a35f" : `hsl(${hueFor(p.name)} 55% 66%)`} size={20} />
             <span>{p.human ? "Your turn" : `${p.name}'s turn`}</span>
           </div>
-          {myTurn && !moving && (
-            <div className="mc-actions">
-              {game.phase === "pit" && (
-                <>
-                  <button className="btn" onClick={() => act(() => game.payToLeavePit())} disabled={p.passes === 0 && p.cash < PIT_FINE}>
-                    {p.passes > 0 ? "Use pardon" : `Pay ${D}${PIT_FINE}`}
-                  </button>
-                  <button className="btn btn-primary" onClick={() => act(() => game.roll())}>Roll for doubles</button>
-                </>
-              )}
-              {game.phase === "roll" && <button className="btn btn-primary btn-lg" onClick={() => act(() => game.roll())}>Roll</button>}
-              {game.phase === "buy" && isOwnable(sq) && (
-                <>
-                  <button className="btn btn-primary" onClick={() => act(() => game.buy())} disabled={p.cash < sq.price}>Buy {sq.name} · {D}{sq.price}</button>
-                  <button className="btn" onClick={() => act(() => game.pass())}>Pass</button>
-                </>
-              )}
-              {game.phase === "end" && <button className="btn btn-primary" onClick={() => act(() => game.endTurn())}>End turn</button>}
-            </div>
-          )}
         </Board>
+        {myTurn && !moving && (
+          <div className="mono-hud">
+            {game.phase === "pit" && (
+              <>
+                <button className="btn" onClick={() => act(() => game.payToLeavePit())} disabled={p.passes === 0 && p.cash < PIT_FINE}>
+                  {p.passes > 0 ? "Use pardon" : `Pay ${D}${PIT_FINE}`}
+                </button>
+                <button className="btn btn-primary" onClick={() => act(() => game.roll())}>Roll for doubles</button>
+              </>
+            )}
+            {game.phase === "roll" && <button className="btn btn-primary btn-lg" onClick={() => act(() => game.roll())}>Roll</button>}
+            {game.phase === "buy" && isOwnable(sq) && (
+              <>
+                <button className="btn btn-primary" onClick={() => act(() => game.buy())} disabled={p.cash < sq.price}>Buy {sq.name} · {D}{sq.price}</button>
+                <button className="btn" onClick={() => act(() => game.pass())}>Pass</button>
+              </>
+            )}
+            {game.phase === "end" && <button className="btn btn-primary" onClick={() => act(() => game.endTurn())}>End turn</button>}
+          </div>
+        )}
       </div>
 
       <aside className="mono-side">
@@ -210,6 +210,7 @@ export function MonopolyPage() {
   const name = useStore((s) => s.name);
   const prize = splitEntry(programBySlug("monopoly"), ENTRY).pot * 4;
   const groups = Object.entries(GROUPS);
+  const preview = useMemo(() => new MonopolyGame(MEMBERS.slice(0, 4).map((m) => ({ id: m.id, name: m.name, human: false })), { maxRounds: ROUNDS, startingCash: 1500, rand: defaultRand }), []);
 
   return (
     <div className="monopoly-page">
@@ -252,9 +253,14 @@ export function MonopolyPage() {
           <button className="room" onClick={() => requireAccount(() => setEntry(true))}>
             <span className="label">Table for four</span>
             <h2>You and three others</h2>
-            <p className="muted">Every dragon of every entry goes back to the winner. The owner of this module takes nothing and is paid only by the Arbiter.</p>
+            <p className="muted">A house game: no module, no owner, no cut. Every dragon of every entry goes to the winner.</p>
             <span className="room-foot"><Dragons value={ENTRY} /> entry · prize <Dragons value={prize} /> <span className="room-cta">Play →</span></span>
           </button>
+          <div className="mono-preview" aria-hidden="true">
+            <Board game={preview} shown={preview.players.map(() => 0)} onDeed={() => {}} tilt>
+              <div className="mono-preview-mark"><Mark size={46} /><span className="label">Laconia</span></div>
+            </Board>
+          </div>
           <div className="panel groups">
             <div className="panel-head"><h3>The streets</h3></div>
             <ul>

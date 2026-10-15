@@ -33,7 +33,7 @@
 .season-xp { flex: 1; min-width: 220px; display: flex; flex-direction: column; gap: 6px; }
 .season-bar { height: 8px; border-radius: 4px; background: var(--bg-4); overflow: hidden; }
 .season-bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
-.track { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(10, minmax(110px, 1fr)); gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.track { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(10, minmax(96px, 1fr)); gap: 6px; overflow-x: auto; padding-bottom: 4px; }
 .track li { display: flex; flex-direction: column; gap: 6px; padding: 10px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--bg); font-size: var(--t-xs); min-height: 104px; }
 .track li.is-reached { border-color: var(--accent); }
 .track li.is-got { opacity: .55; }
@@ -286,7 +286,7 @@
 .mast-motto { font-style: italic; color: #c9b896; }
 .mast-sections { display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; margin-top: 12px; font: 600 11px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; }
 .mast-sections a { color: #c9b896; }
-.mast-sections a.is-off { opacity: .35; text-decoration: line-through; }
+.mast-sections a.is-off { opacity: .4; }
 .paper-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: 32px; }
 .paper-main { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
 .paper-side { display: flex; flex-direction: column; gap: 22px; border-left: 1px solid var(--rule); padding-left: 24px; min-width: 0; }
@@ -357,7 +357,8 @@
   transition: transform .8s cubic-bezier(.2,.7,.2,1);
   transform-style: preserve-3d;
 }
-.mb-stage.is-tilt .mb { transform: rotateX(32deg) rotateZ(0deg); }
+.mb-stage.is-tilt { margin: -70px 0 -50px; }
+.mb-stage.is-tilt .mb { transform: rotateX(30deg) scale(.86); }
 .mt {
   position: relative; border: 0; padding: 0; overflow: hidden; cursor: default; color: #2a2017; min-width: 0;
   background: linear-gradient(160deg, #efe6d6, #ded1bb);
@@ -431,3 +432,28 @@
   .ins-row { grid-template-columns: 32px 1fr 64px 56px; }
   .ins-row .spark { display: none; }
 }
+
+/* Monopoly landing: the board itself, tilted, as the hero */
+.mono-intro { grid-template-columns: minmax(0, .9fr) minmax(0, 1.4fr); }
+.mono-intro .groups { grid-column: 1; }
+.mono-preview { grid-column: 2; grid-row: 1 / span 2; pointer-events: none; overflow: hidden; border-radius: 18px; padding: 8px 0 0; }
+.mono-preview .mb-stage { max-width: 620px; margin: -60px auto -60px; }
+.mono-preview-mark { display: grid; place-items: center; gap: 10px; height: 100%; color: var(--accent); }
+@media (max-width: 960px) {
+  .mono-intro { grid-template-columns: 1fr; }
+  .mono-preview, .mono-intro .groups { grid-column: auto; grid-row: auto; }
+  .mono-preview .mb-stage { margin: -20px auto -50px; }
+}
+
+/* Turn controls float flat above the tilted board: pointer hits inside a rotated plane are unreliable. */
+.board-wrap { position: relative; }
+.mono-hud {
+  position: absolute; left: 50%; bottom: 18px; translate: -50% 0; z-index: 5;
+  display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; align-items: center;
+  padding: 10px; border-radius: 14px; max-width: calc(100% - 24px);
+  background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: blur(10px);
+  border: 1px solid var(--line); box-shadow: 0 18px 40px -16px #000;
+  animation: hud-in .25s ease;
+}
+@keyframes hud-in { from { opacity: 0; translate: -50% 8px; } }
+@media (max-width: 900px) { .mono-hud { position: sticky; left: 0; translate: none; bottom: 12px; margin: 8px auto 0; width: fit-content; } @keyframes hud-in { from { opacity: 0; } } }
