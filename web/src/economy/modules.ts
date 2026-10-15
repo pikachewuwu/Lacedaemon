@@ -91,6 +91,22 @@ export const MODULES: ModuleProgram[] = [
     volume7d: 310000,
     summary: "Astragaloi at the Symposium table. Everyone antes, everyone throws, the best throw takes the pot. Venus beats all.",
   },
+  {
+    kind: "module",
+    id: "04",
+    slug: "icarus",
+    name: "Icarus",
+    owner: "brasidas",
+    price: 2500,
+    routes: { pot: 0.98 },
+    locked: 8800,
+    lockDays: 90,
+    backers: 2,
+    players7d: 6,
+    entries7d: 212,
+    volume7d: 640000,
+    summary: "Fly toward the sun with everyone in the room, let go before the wax melts. Entries fund the bank that pays the fliers.",
+  },
 ];
 
 export const HOUSE: GameProgram[] = [
@@ -98,6 +114,7 @@ export const HOUSE: GameProgram[] = [
   house("monopoly", "Monopoly", "The Laconian board. Every entry dragon goes to the winner."),
   house("kottabos", "Kottabos", "Flick wine at the bronze disc. Everyone who knocks it down splits the round's pot."),
   house("arena", "Arena", "Ranked Spirits duels. Wins pay from the house."),
+  house("slots", "The machine", "The server's slot machine with the classic UnbelievaBoat odds. Returns 96.875%."),
   house("pente", "Pente", "The daily five-letter word. Free to play, solves pay from the house."),
 ];
 

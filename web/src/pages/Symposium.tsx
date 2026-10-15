@@ -8,11 +8,27 @@ import { CUP, STAND, meter, pathAt, resolve, type Shot } from "../games/kottabos
 import { defaultRand } from "../games/rng";
 import { Avatar, Dragons, toast } from "../ui/kit";
 import { KindChip, ModuleLine } from "../ui/Entry";
+import { Icarus } from "./Icarus";
+import { Machine } from "./Machine";
 
 /**
  * The Symposium: one room, a long evening. Knucklebones at the table,
- * kottabos at the stand, and a log everyone in the room can read.
+ * kottabos at the stand, Icarus and the machine in the corner, and a log
+ * everyone in the room can read. All four tables stay live while you look
+ * at another one, so a flight in the air keeps flying.
  */
+
+export const TABLES_IN_ROOM = [
+  { id: "knucklebones", label: "Knucklebones", note: "module 03" },
+  { id: "kottabos", label: "Kottabos", note: "skill" },
+  { id: "icarus", label: "Icarus", note: "module 04" },
+  { id: "machine", label: "The machine", note: "house" },
+] as const;
+export type RoomTable = (typeof TABLES_IN_ROOM)[number]["id"];
+
+let wanted: RoomTable | null = null;
+/** Ask the Symposium to open at a given table (from a lobby tile, say). */
+export const openTable = (t: RoomTable) => { wanted = t; };
 
 interface Line {
   id: number;
@@ -377,6 +393,11 @@ function RoomLog({ lines, say }: ReturnType<typeof useRoom>) {
 
 export function SymposiumPage() {
   const room = useRoom();
+  const [table, setTable] = useState<RoomTable>(() => {
+    const t = wanted ?? "knucklebones";
+    wanted = null;
+    return t;
+  });
   return (
     <div className="symposium">
       <div className="meander" aria-hidden="true" />
@@ -384,14 +405,24 @@ export function SymposiumPage() {
         <div>
           <p className="label">One room · a long evening</p>
           <h1 className="display page-title">Symposium</h1>
-          <p className="muted">Games the Greeks played over wine. Everything that happens at the table lands in the room for everyone here.</p>
+          <p className="muted">Games of chance and skill, played over wine. Everything that happens at any table lands in the room for everyone here.</p>
         </div>
-        <ModuleLine slug="knucklebones" />
+        <ModuleLine slug={table === "icarus" ? "icarus" : table === "machine" ? "slots" : table === "kottabos" ? "kottabos" : "knucklebones"} />
       </header>
+      <div className="sym-tables" role="tablist" aria-label="Tables">
+        {TABLES_IN_ROOM.map((t) => (
+          <button key={t.id} role="tab" aria-selected={table === t.id} className={`sym-table ${table === t.id ? "is-on" : ""}`} onClick={() => setTable(t.id)}>
+            <span>{t.label}</span>
+            <small className="mono">{t.note}</small>
+          </button>
+        ))}
+      </div>
       <div className="sym-grid">
         <div className="sym-main">
-          <Knucklebones say={room.say} />
-          <Kottabos say={room.say} />
+          <div hidden={table !== "knucklebones"}><Knucklebones say={room.say} /></div>
+          <div hidden={table !== "kottabos"}><Kottabos say={room.say} /></div>
+          <div hidden={table !== "icarus"}><Icarus say={room.say} /></div>
+          <div hidden={table !== "machine"}><Machine say={room.say} /></div>
         </div>
         <RoomLog {...room} />
       </div>

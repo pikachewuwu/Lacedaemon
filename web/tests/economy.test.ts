@@ -4,6 +4,7 @@ import { bound, fallbackWeights, MAX_SHARE } from "../src/economy/arbiter";
 import { capYear, schedule, CAP } from "../src/economy/emission";
 import { openPack, rollDrop, SPIRITS, byId } from "../src/games/spirits/catalog";
 import { seeded } from "../src/games/rng";
+import { crashPoint, EDGE, altitudeAt, secondsTo } from "../src/games/icarus";
 
 describe("entries", () => {
   it("routes every dragon and buys DAEMON from the owner", () => {
@@ -93,5 +94,22 @@ describe("kottabos", () => {
     for (let p = 0; p <= 1; p += 0.01) for (let a = 0; a <= 1; a += 0.01) if (resolve({ power: p, angle: a }).hit) hits++;
     expect(hits).toBeGreaterThan(40);
     expect(hits).toBeLessThan(2500); // hard, not trivial
+  });
+});
+
+
+describe("icarus", () => {
+  it("returns about 97% over many flights for any fixed target", () => {
+    const rand = seeded(42);
+    const points = Array.from({ length: 200000 }, () => crashPoint(rand));
+    for (const target of [1.5, 2, 5]) {
+      const ret = points.reduce((s, c) => s + (c >= target ? target : 0), 0) / points.length;
+      expect(Math.abs(ret - (1 - EDGE))).toBeLessThan(0.03);
+    }
+    expect(points.reduce((a, b) => Math.min(a, b), Infinity)).toBe(1);
+  });
+
+  it("inverts time and altitude", () => {
+    expect(altitudeAt(secondsTo(4.2))).toBeCloseTo(4.2, 9);
   });
 });

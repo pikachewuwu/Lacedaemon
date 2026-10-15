@@ -10,7 +10,8 @@ import { MEMBERS } from "../app/members";
 import { ago, fmt } from "../app/format";
 import { PROGRAMS } from "../economy/modules";
 import { PACK_PRICE } from "../games/spirits/catalog";
-import { Avatar, Daemon, Dragons, useNow } from "../ui/kit";
+import { Avatar, Daemon, DragonSign, Dragons, useNow } from "../ui/kit";
+import { openTable, type RoomTable } from "./Symposium";
 import { SkyBand } from "../ui/Sky";
 import { EntryModal, KindChip } from "../ui/Entry";
 import { SpiritCard } from "../ui/SpiritCard";
@@ -115,6 +116,19 @@ function GameArt({ kind }: { kind: string }) {
         ))}
       </div>
     );
+  if (kind === "icarus")
+    return (
+      <div className="ga ga-icarus">
+        <i className="sun" />
+        <svg viewBox="0 0 200 100" preserveAspectRatio="none"><path d="M10 92 Q 90 88 150 30" /></svg>
+      </div>
+    );
+  if (kind === "slots")
+    return (
+      <div className="ga ga-slots">
+        {[0, 1, 2].map((i) => <span key={i}><DragonSign size={30} /></span>)}
+      </div>
+    );
   if (kind === "arena")
     return (
       <div className="ga ga-arena">
@@ -132,24 +146,26 @@ function GameArt({ kind }: { kind: string }) {
   );
 }
 
-interface Tile { route: Route; slug: string; art: string; title: string; line: string; cta: string; meta: string }
+interface Tile { route: Route; slug: string; art: string; title: string; line: string; cta: string; meta: string; table?: RoomTable }
 
 const HOUSE_TILES: Tile[] = [
   { route: "poker", slug: "poker", art: "poker", title: "Poker", line: "Sit & go tournaments, or a private table where dragons, cards and Minecraft items can be staked.", cta: "Sit down", meta: "from 2,500" },
   { route: "monopoly", slug: "monopoly", art: "monopoly", title: "Monopoly", line: "The Laconian board. Buy the Eurotas, build on Orthia, bankrupt your friends.", cta: "Play a game", meta: "10,000" },
   { route: "arena", slug: "arena", art: "arena", title: "Arena", line: "Three spirits a side. Guess who they send, and send what beats it.", cta: "Find a duel", meta: "ranked" },
+  { route: "symposium", slug: "slots", art: "slots", title: "The machine", line: "The server's slot machine, with the odds it has always had. Three in a row pays up to 34×.", cta: "Pull", meta: "from 500", table: "machine" },
 ];
 
 const MEMBER_TILES: Tile[] = [
   { route: "blue-or-orange", slug: "blue-or-orange", art: "blue-or-orange", title: "Blue or Orange", line: "Once a day. Back a colour. The smallest pool wins, the two biggest fight.", cta: "Stake today", meta: "from 500" },
   { route: "spirits", slug: "spirits", art: "spirits", title: "Spirits", line: "Open packs, collect all 24, duel in the arena, trade or stake them.", cta: "Open a pack", meta: `pack ${fmt(PACK_PRICE)}` },
-  { route: "symposium", slug: "knucklebones", art: "knucklebones", title: "Knucklebones", line: "At the Symposium. Everyone antes, everyone throws. Venus beats all.", cta: "Take a seat", meta: "from 500" },
+  { route: "symposium", slug: "knucklebones", art: "knucklebones", title: "Knucklebones", line: "At the Symposium. Everyone antes, everyone throws. Venus beats all.", cta: "Take a seat", meta: "from 500", table: "knucklebones" },
+  { route: "symposium", slug: "icarus", art: "icarus", title: "Icarus", line: "The whole room takes off together. Let go before the wax melts.", cta: "Board", meta: "from 500", table: "icarus" },
 ];
 
 function TileCard({ t }: { t: Tile }) {
   const m = PROGRAMS.find((x) => x.slug === t.slug);
   return (
-    <button className="tile" onClick={() => go(t.route)}>
+    <button className="tile" onClick={() => { if (t.table) openTable(t.table); go(t.route); }}>
       <GameArt kind={t.art} />
       <div className="tile-body">
         <div className="tile-top">

@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { go } from "../app/router";
 import { addCards, setState, spend, useStore } from "../app/store";
 import { requireAccount } from "../app/account";
 import { fmt } from "../app/format";
 import { programBySlug, splitEntry } from "../economy/modules";
-import { defaultRand } from "../games/rng";
+import { defaultRand, hashSeed, seeded } from "../games/rng";
 import {
   byId, cardValue, openPack, PACK_PRICE, PACK_SLOTS, RARITY_ORDER, REFERENCE, SPIRITS,
   type CardInstance, type Element,
@@ -48,8 +48,81 @@ export function PackReveal({ cards }: { cards: CardInstance[] }) {
   );
 }
 
+/**
+ * The reel: the rare slot spins past like a case opening and lands under the
+ * marker. Teasers are drawn at the pack's real odds, with the occasional
+ * mythic or exalted parked right next to where it stops.
+ */
+const REEL_LEN = 52;
+const LAND = 44;
+const STEP = 108; // card width 96 + gap 12
+const REEL_MS = 5400;
+
+function CaseReel({ best, onDone }: { best: CardInstance; onDone: () => void }) {
+  const done = useRef(onDone);
+  done.current = onDone;
+  const box = useRef<HTMLDivElement>(null);
+  const strip = useRef<HTMLDivElement>(null);
+  const items = useMemo(() => {
+    const r = seeded(hashSeed(best.uid));
+    const odds = PACK_SLOTS[4];
+    const pick = () => {
+      let x = r();
+      for (const [rar, p] of odds) if ((x -= p) < 0) return rar;
+      return odds[0][0];
+    };
+    const of = (rar: string) => {
+      const pool = SPIRITS.filter((sp) => sp.rarity === rar);
+      return pool[Math.floor(r() * pool.length)].id;
+    };
+    const list = Array.from({ length: REEL_LEN }, () => of(pick()));
+    list[LAND] = best.spirit;
+    if (r() < 0.5) list[LAND + (r() < 0.5 ? 1 : -1)] = of(r() < 0.3 ? "exalted" : "mythic");
+    return list;
+  }, [best]);
+
+  useEffect(() => {
+    const el = strip.current!;
+    const w = box.current!.clientWidth;
+    const jitter = (seeded(hashSeed(best.uid + "j"))() - 0.5) * 70;
+    el.style.transition = "none";
+    el.style.transform = "translateX(0)";
+    const raf = requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        el.style.transition = `transform ${REEL_MS}ms cubic-bezier(.1,.7,.12,1)`;
+        el.style.transform = `translateX(${-(LAND * STEP + 48 - w / 2 + jitter)}px)`;
+      }),
+    );
+    const t = setTimeout(() => done.current(), REEL_MS + 500);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(t);
+    };
+  }, [best]);
+
+  return (
+    <div className="case">
+      <div className="case-window" ref={box}>
+        <div className="case-strip" ref={strip}>
+          {items.map((id, i) => (
+            <div key={i} className={`case-item r-${byId(id).rarity}`}>
+              <SpiritCard spiritId={id} size="sm" />
+            </div>
+          ))}
+        </div>
+        <i className="case-marker" aria-hidden="true" />
+      </div>
+      <button className="btn btn-ghost btn-sm" onClick={() => done.current()}>Skip</button>
+    </div>
+  );
+}
+
+let reelOn = true;
+
 function Packs() {
   const [opened, setOpened] = useState<CardInstance[] | null>(null);
+  const [spinning, setSpinning] = useState(false);
+  const [reel, setReel] = useState(reelOn);
   const [confirm, setConfirm] = useState(false);
   const m = programBySlug("spirits");
   const split = splitEntry(m, PACK_PRICE);
@@ -60,12 +133,15 @@ function Packs() {
       const cards = openPack(defaultRand);
       addCards(cards, "Opened a Spirits pack", "pack");
       setOpened(cards);
+      setSpinning(reel);
       setConfirm(false);
     });
   return (
     <div className="packs">
       <div className="pack-stage">
-        {opened ? (
+        {opened && spinning ? (
+          <CaseReel best={opened[4]} onDone={() => setSpinning(false)} />
+        ) : opened ? (
           <>
             <PackReveal cards={opened} />
             <div className="pack-again">
@@ -80,6 +156,9 @@ function Packs() {
             <span className="label">Series I · 5 cards</span>
           </button>
         )}
+        <label className="reel-toggle faint">
+          <input type="checkbox" checked={reel} onChange={(e) => { reelOn = e.target.checked; setReel(e.target.checked); }} /> Spin the rare slot on the reel
+        </label>
       </div>
       <aside className="pack-side">
         <section className="panel">
@@ -105,7 +184,7 @@ function Packs() {
       </aside>
       <Modal open={confirm} onClose={() => setConfirm(false)} label="Buy a pack">
         <div className="modal-head">
-          <span className="label">Spirits · module 04</span>
+          <span className="label">Spirits · module 02</span>
           <h2 className="display" style={{ fontSize: "var(--t-xl)" }}>Open a pack</h2>
           <p className="muted">Five cards. Forty percent of the price goes to this Sunday's prize.</p>
         </div>
