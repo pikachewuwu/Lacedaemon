@@ -18,7 +18,7 @@
 .ga-arena .spirit-card { --w: 64px; transform: translateY(14px); }
 .ga-vs { font-size: 1.4rem; color: var(--accent); }
 
-.holdings { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.holdings { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
 .holding-mc { text-align: left; cursor: pointer; color: inherit; background: linear-gradient(170deg, #17242b, var(--bg-2)); }
 .holding-items { display: flex; gap: 10px; flex-wrap: wrap; font-size: var(--t-md) !important; }
 .holding-items span { display: inline-flex; align-items: center; gap: 4px; }
@@ -475,3 +475,72 @@
 .symposium .reel { background: #120d0a; border-color: #3b2418; }
 .symposium .slots-body { padding: 4px 0 0; }
 @media (max-width: 760px) { .symposium .icarus { grid-template-columns: 1fr; } }
+
+/* ---- Treasury: bonds as engraved certificates ------------------------------------------- */
+.t-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
+.t-stats > div { display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; border-radius: var(--r-lg); background: var(--bg-2); border: 1px solid var(--line); font-size: var(--t-lg); }
+.t-cover { color: var(--good); font-size: var(--t-lg); }
+.certs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 18px; align-items: start; }
+.cert {
+  --gold: #d9b77a; --paper: #1b1611;
+  position: relative; display: flex; flex-direction: column; gap: 12px; padding: 22px; border-radius: 6px; overflow: hidden;
+  background: radial-gradient(ellipse at 50% 0%, #2a2117, var(--paper) 70%);
+  border: 1px solid #4a3a26; box-shadow: inset 0 0 0 6px var(--paper), inset 0 0 0 7px #6b5536, 0 24px 40px -26px #000;
+  min-width: 0;
+}
+.cert > * { position: relative; }
+.cert-guilloche {
+  position: absolute !important; inset: 0; pointer-events: none; opacity: .16;
+  background:
+    repeating-radial-gradient(circle at 110% -10%, transparent 0 9px, var(--gold) 9px 10px),
+    repeating-radial-gradient(circle at -10% 110%, transparent 0 11px, var(--gold) 11px 12px);
+  mask-image: linear-gradient(160deg, #000, transparent 55%, #000);
+}
+.cert-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.cert-head .label { color: #a88c5f; }
+.cert-status { white-space: nowrap; flex: none; font: 600 10px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px; border: 1px solid currentColor; }
+.st-open { color: var(--good); } .st-subscribing { color: var(--accent); } .st-placed { color: #8c837c; }
+.cert-name { color: var(--gold); font-size: var(--t-2xl); line-height: 1.05; letter-spacing: .01em; }
+.cert-funds { color: var(--text-2); font-size: var(--t-sm); margin: 0; }
+.cert-terms { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 14px; margin: 0; padding: 12px 0; border-top: 1px solid #4a3a26; border-bottom: 1px solid #4a3a26; }
+.cert-terms div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cert-terms dt { font: 500 10px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: #a88c5f; }
+.cert-terms dd { margin: 0; font-size: var(--t-sm); }
+.cert-terms small { display: block; color: var(--text-3); font-size: 11px; }
+.cert-fill { display: flex; flex-direction: column; gap: 6px; font-size: 11px; }
+.cert-bar { height: 6px; border-radius: 3px; background: #2e251b; overflow: hidden; }
+.cert-bar i { display: block; height: 100%; background: linear-gradient(90deg, #a88c5f, var(--gold)); }
+.cert-pays { margin: 0; font-size: var(--t-sm); color: var(--text-2); }
+.cert-book { display: flex; flex-direction: column; gap: 6px; }
+.cert-book ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.cert-book li { display: grid; grid-template-columns: 22px 1fr auto 44px; gap: 8px; align-items: center; font-size: 12px; padding: 3px 6px; border-radius: 6px; }
+.cert-book li.is-you { background: var(--accent-soft); }
+.cert-book .avatar { width: 20px; height: 20px; font-size: .55rem; }
+.cert-book s { color: var(--bad); }
+.cert-foot { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: auto; padding-top: 4px; }
+.cert-held { margin-left: auto; color: var(--gold); font-size: 12px; }
+.stepper { display: inline-flex; align-items: center; gap: 6px; }
+.stepper .num { min-width: 22px; text-align: center; }
+.t-grid { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 16px; margin-bottom: 16px; align-items: start; }
+.t-table { width: 100%; border-collapse: collapse; font-size: var(--t-sm); }
+.t-table th { text-align: left; font: 500 10px var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); padding: 10px 16px 6px; }
+.t-table td { padding: 10px 16px; border-top: 1px solid var(--line); vertical-align: middle; }
+.t-board, .t-income { list-style: none; margin: 0; padding: 6px 0; }
+.t-board li { display: grid; grid-template-columns: 28px 1fr auto; gap: 10px; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--line); font-size: var(--t-sm); }
+.t-board li:last-child { border-bottom: 0; }
+.t-income li { display: grid; grid-template-columns: minmax(0, 1fr) 90px auto; gap: 12px; align-items: center; padding: 10px 16px; font-size: var(--t-sm); }
+.t-income-bar { height: 6px; border-radius: 3px; background: var(--bg-4); overflow: hidden; }
+.t-income-bar i { display: block; height: 100%; background: var(--accent); }
+.t-note { font-size: 12px; }
+.t-how ol { margin: 0; padding: 10px 16px 4px 34px; display: flex; flex-direction: column; gap: 8px; font-size: var(--t-sm); color: var(--text-2); }
+.t-how b { color: var(--text); }
+.t-how .t-note { padding: 8px 16px 14px; margin: 0; }
+@media (max-width: 1180px) { .certs { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 960px) {
+  .t-stats { grid-template-columns: 1fr 1fr; }
+  .certs, .t-grid { grid-template-columns: 1fr; }
+  .t-table thead { display: none; }
+  .t-table tr { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 10px 16px; border-top: 1px solid var(--line); }
+  .t-table td { padding: 0; border: 0; }
+}
+button.holding { text-align: left; align-items: flex-start; cursor: pointer; font: inherit; color: inherit; }

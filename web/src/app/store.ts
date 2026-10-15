@@ -14,7 +14,7 @@ export interface LedgerEntry {
   id: string;
   at: number;
   text: string;
-  tag: "entry" | "prize" | "collect" | "pack" | "market" | "drop" | "wager" | "refund" | "quest" | "minecraft";
+  tag: "entry" | "prize" | "collect" | "pack" | "market" | "drop" | "wager" | "refund" | "quest" | "minecraft" | "bond";
   dragons?: number;
   daemon?: number;
   cards?: string[];
@@ -83,6 +83,19 @@ export interface State {
   pente: { day: string; guesses: string[]; streak: number; played: number; won: number; dist: number[] };
   /** Messages you posted from elsewhere on the site (shares, Minecraft chat), shown in Chat. */
   posts: { id: string; channel: string; text: string; at: number }[];
+  /** Dragon bonds you hold (lots), subscription orders, and coupons paid so far. */
+  bonds: { lots: BondLot[]; orders: Record<string, number>; earned: number };
+}
+
+export interface BondLot {
+  id: string;
+  series: string;
+  qty: number;
+  /** First serial number in the lot. */
+  serial: number;
+  /** Last season week whose coupon this lot has been paid (or bought after). */
+  paidThrough: number;
+  at: number;
 }
 
 export type Asset =
@@ -142,6 +155,7 @@ const initial: State = {
   trade: { agents: [], offers: [], done: {}, day: "" },
   pente: { day: "", guesses: [], streak: 0, played: 0, won: 0, dist: [0, 0, 0, 0, 0, 0] },
   posts: [],
+  bonds: { lots: [], orders: {}, earned: 0 },
 };
 
 function load(): State {

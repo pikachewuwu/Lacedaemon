@@ -7,7 +7,8 @@ One step at a time. Each step ships something usable before the next starts.
 - [x] Web app shell: lobby, Sunday, wallet, leaderboard, status line, sign-in flow
 - [x] Playable poker (sit & go, private tables with any stakes including Minecraft items), Monopoly, Blue or Orange
 - [x] Spirits: 24 creatures, packs, drops; the Arena with an Elo ladder
-- [x] The Symposium: knucklebones and kottabos in one room with a public log
+- [x] The Symposium: knucklebones, kottabos, Icarus and the slot machine in one room with a public log
+- [x] The Treasury and dragon bonds
 - [x] Pente (the daily word), quests and a season track
 - [x] Trade: one market, direct offers, trading agents
 - [x] Chat (channels, voice rooms, bots, commands), the Minecraft section, The Laconian with The Wire, Ideas

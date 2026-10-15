@@ -8,7 +8,7 @@
 
 **Chat** is its own place: deep violet with slow purple clouds behind frosted panels, so it never feels like a game page. **Minecraft** is daylight: a blue sky with pixel clouds and a square sun, light glass panels, inventory slots and item sprites drawn on an 8×8 grid. **The Symposium** borrows from red-figure vases: black ground, terracotta lines, a meander border. **The Laconian** is set like a broadsheet in Newsreader.
 
-The surface is organised by a left sidebar (Play, Collect, World, You) with badges for unread chat, claimable quests and a new paper, and a notification bell in the top bar. Nothing borrows the language of skin gambling: no cases, no rarity spin strips, no crash charts.
+The surface is organised by a left sidebar (Play, Collect, World, You) with badges for unread chat, claimable quests and a new paper, and a notification bell in the top bar. The casino pieces (the slot machine, Icarus, the pack reel) are kept, but they live in the Symposium and on the Spirits page rather than setting the tone of the site. **The Treasury** prints bonds as engraved certificates: dark paper, gold guilloche, serial numbers.
 
 ## The mark
 

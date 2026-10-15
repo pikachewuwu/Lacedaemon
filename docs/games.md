@@ -50,9 +50,13 @@ The server classic, rebuilt around rock-paper-scissors.
 
 ## The Symposium
 
-One room, everyone in it, a long evening. Every ante, throw, hit and chat line goes into the room log, so nobody plays alone. The chance games here are old ones played between people. There are no crash charts, reels or cases.
+One room, everyone in it, a long evening. Four tables share one room log: every ante, throw, boarding, let-go, spin and chat line goes into it, so nobody plays alone. The tables keep running while you look at another one.
 
 **Knucklebones (astragaloi, module 03).** Players ante 500, 2,000 or 10,000 during a seven-second window, then everyone throws four bones together. Each bone lands on 1, 3, 4 or 6 (the narrow sides, 1 and 6, are rarer). **Venus** (all four different) beats everything; the **Dog** (four ones) loses to everything; then four of a kind; then the higher total. The best throw takes 97% of the antes, split on a tie. It's player against player: the house has no edge to win.
+
+**Icarus (module 04, by brasidas).** Everyone boards during an eight-second window, then the whole room takes off together. The multiplier is your altitude, climbing toward the sun (2× after about six seconds). Let go any time to keep stake × altitude, or set an automatic let-go. When the wax melts, everyone still flying falls. Crash points follow `P(crash ≥ m) = 0.97 / m`, so any fixed strategy returns about 97% over time (tested over 200,000 flights).
+
+**The machine (house).** The server's slot machine with its published UnbelievaBoat odds: four symbols paying 34×, 16×, 8× and 4×, three of a kind 1 in 16, return 96.875%. Its edge is the Treasury's main income.
 
 **Kottabos (house).** The drinking game: flick the last of your wine at a bronze disc balanced on a stand. Two presses set power and angle. Each turn costs 500 into one shared pot; knock the disc into the basin and the whole pot is yours. A miss feeds the pot for the next drinker. Skill, not odds.
 
@@ -82,6 +86,7 @@ Small things to do across the whole site: four daily quests drawn from a pool (c
 Twenty-four creatures in four elements. Water, fire and grass mirror Blue or Orange; aether stands outside the cycle.
 
 - Rarities: common, uncommon, rare, mythic, exalted. Any card can be foil (6%).
+- **The reel:** opening a pack can spin the rare slot on a case-opening strip first. The teasers on the strip are drawn at the pack's real odds; the card it stops on is the card you got. It can be switched off.
 - **Packs** (3,000): three commons, one uncommon, one rare-or-better (80% rare, 16% mythic, 4% exalted). Every new member gets one free.
 - **Drops:** a 30% chance of a card after any finished game. A Blue or Orange win drops a spirit of the winning colour.
 - **Trading:** every spirit has an order book on the Trade page, next to Minecraft items and DAEMON. Sellers pay a 5% fee to the module.

@@ -15,15 +15,16 @@ Underneath it runs **DAEMON**, a fixed-supply currency for the members who build
 | | Poker | No-limit hold'em: sit & go tournaments and **private tables**, where players stake dragons, DAEMON, Spirits cards or **Minecraft items** and must all accept before the deal |
 | | Monopoly | Classic rules on a Laconian board: a tilted 3D board, Greek pieces that hop square by square |
 | | Blue or Orange | The server classic, now with three colours and rock-paper-scissors dynamics that make cheating pointless |
-| | Symposium | One shared room with a public log: **knucklebones** (player-vs-player pot, module 03) and **kottabos** (a skill shot; everyone's antes in one pot) |
+| | Symposium | One shared room with a public log and four tables: **knucklebones** (player-vs-player pot, module 03), **kottabos** (a skill shot; everyone's antes in one pot), **Icarus** (the whole room flies toward the sun together, module 04) and **the machine** (the server's slot machine) |
 | | Arena | Ranked Spirits duels: three a side, both players secretly pick who steps forward, Elo ladder |
 | | Pente | The daily five-letter word, same for everyone, solved for dragons and shared into #pente |
-| **Collect** | Spirits | 24 collectible creatures: packs, drops after games, cards you can duel or stake |
+| **Collect** | Spirits | 24 collectible creatures: packs (with an optional case-opening reel for the rare slot), drops after games, cards you can duel or stake |
 | | Trade | One market for Spirits, Minecraft items and DAEMON; direct swap offers between members; **trading agents** that buy and sell for you (plain words, rules, or your own bot through a capped API key) |
 | | Quests | Daily and weekly quests across every page, and a ten-level season track |
 | **World** | Chat | Channels, voice rooms, roles, bots and commands (`=collect`, `/bones`): a Discord replacement with its own purple-cloud look |
 | | Minecraft | The SMP in daylight: chat bridged to #minecraft, who is online, your item vault, account linking, prices and bounties |
 | | The Laconian | The server's newspaper, written from site data, with subscribable sections (on the site or by Discord DM) and **The Wire**, the Hacker News front page |
+| | Treasury | The house's books in public, and **dragon bonds**: the server borrows dragons for things worth doing ahead of time and pays them back at game night |
 | | Ideas | The public backlog: everything the server might become, voted on |
 | **You** | Wallet, Profile, Leaderboard | Everything you hold (vault included), roles and titles, and where you stand |
 
@@ -31,8 +32,8 @@ Underneath it runs **DAEMON**, a fixed-supply currency for the members who build
 
 ## Two kinds of games
 
-- **House games** belong to the server: Sunday night, poker, Monopoly, the arena, kottabos, Pente. Dragons only. Every entry dragon goes to the prize.
-- **Daemon modules** are games members build: Blue or Orange, Spirits and Knucklebones in the mockup. An entry still costs dragons, but those dragons buy DAEMON from the builder, so every player walks away holding a little. The builder decides where the dragons go. The Arbiter pays builders for what people actually play.
+- **House games** belong to the server: Sunday night, poker, Monopoly, the arena, kottabos, the slot machine, Pente. Dragons only. Every entry dragon goes to the prize.
+- **Daemon modules** are games members build: Blue or Orange, Spirits, Knucklebones and Icarus in the mockup. An entry still costs dragons, but those dragons buy DAEMON from the builder, so every player walks away holding a little. The builder decides where the dragons go. The Arbiter pays builders for what people actually play.
 
 ## Run it
 
@@ -40,7 +41,7 @@ Underneath it runs **DAEMON**, a fixed-supply currency for the members who build
 cd web
 npm install
 npm run dev        # http://localhost:5173
-npm test           # game engines, economy, emission, trade, pente, arena
+npm test           # game engines, economy, emission, trade, bonds, pente, arena
 npm run build      # static site in web/dist
 SINGLE=1 npx vite build   # one self-contained HTML file
 ```
@@ -52,9 +53,9 @@ Everything is a mockup: sign-in, balances, members, chat, the Minecraft server, 
 ```
 web/
   src/games/        poker (evaluator, side pots, bots), monopoly, blue-or-orange, spirits, arena,
-                    astragaloi, kottabos, pente (daily word), minecraft items
+                    astragaloi, kottabos, icarus, pente (daily word), minecraft items
   src/economy/      modules and house games, entries, arbiter fallback, emission, market, wagers,
-                    trade (order books, agents)
+                    trade (order books, agents), bonds
   src/app/          state, routing, time (Berlin), sign-in gate, quests, trade actions, the wire
   src/pages/        the surface
   src/daemon/       the world underneath and its ripple field

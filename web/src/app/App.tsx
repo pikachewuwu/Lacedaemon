@@ -25,6 +25,7 @@ import { ChatPage } from "../pages/Chat";
 import { MinecraftPage } from "../pages/Minecraft";
 import { NewsPage } from "../pages/News";
 import { IdeasPage } from "../pages/Ideas";
+import { TreasuryPage } from "../pages/Treasury";
 import { LeaderboardPage } from "../pages/Leaderboard";
 import { WalletPage } from "../pages/Wallet";
 import { ProfilePage } from "../pages/Profile";
@@ -60,6 +61,7 @@ const NAV: { group: string; items: NavItem[] }[] = [
       { route: "chat", label: "Chat" },
       { route: "minecraft", label: "Minecraft" },
       { route: "news", label: "The Laconian" },
+      { route: "treasury", label: "Treasury" },
       { route: "ideas", label: "Ideas" },
     ],
   },
@@ -312,6 +314,7 @@ const PAGES: Record<Exclude<Route, "daemon">, () => ReactNode> = {
   minecraft: () => <MinecraftPage />,
   news: () => <NewsPage />,
   ideas: () => <IdeasPage />,
+  treasury: () => <TreasuryPage />,
   wallet: () => <WalletPage />,
   profile: () => <ProfilePage />,
   leaderboard: () => <LeaderboardPage />,

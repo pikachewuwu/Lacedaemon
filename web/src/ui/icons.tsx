@@ -54,6 +54,7 @@ const PATHS: Record<string, ReactElement> = {
       <path d="M14.5 7.5H16v8a1.5 1.5 0 0 1-1.5 1.5M6.5 7.5h5.5M6.5 10.5h5.5M6.5 13.5h3.5" />
     </g>
   ),
+  treasury: <path {...P} d="M3 7.5 10 4l7 3.5M4.5 8.5v6M8 8.5v6M12 8.5v6M15.5 8.5v6M3 16.5h14" />,
   ideas: <path {...P} d="M7.5 13.5c0-1.6-2.5-2.6-2.5-5.5a5 5 0 0 1 10 0c0 2.9-2.5 3.9-2.5 5.5M7.8 15.5h4.4M8.5 17.5h3" />,
   wallet: (
     <g {...P}>

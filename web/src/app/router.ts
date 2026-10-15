@@ -3,13 +3,13 @@ import { useSyncExternalStore } from "react";
 export type Route =
   | "lobby" | "sunday" | "poker" | "monopoly" | "blue-or-orange" | "symposium" | "arena" | "pente"
   | "spirits" | "trade" | "quests"
-  | "chat" | "minecraft" | "news" | "ideas"
+  | "chat" | "minecraft" | "news" | "treasury" | "ideas"
   | "wallet" | "profile" | "leaderboard"
   | "daemon";
 
 const ROUTES: Route[] = [
   "lobby", "sunday", "poker", "monopoly", "blue-or-orange", "symposium", "arena", "pente",
-  "spirits", "trade", "quests", "chat", "minecraft", "news", "ideas", "wallet", "profile", "leaderboard", "daemon",
+  "spirits", "trade", "quests", "chat", "minecraft", "news", "treasury", "ideas", "wallet", "profile", "leaderboard", "daemon",
 ];
 
 function fromHash(): Route {
